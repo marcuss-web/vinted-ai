@@ -5,35 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Vinted AI · Resale Intelligence</title>
     <style>
-        * { -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; padding: 0; overflow-x: hidden; background: #07090f; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         :root {
-            --bg: #07090f; --surface: #0e1119; --surface2: #141820;
-            --border: #1c2333; --accent: #00e5ff; --purple: #7c3aed;
-            --text: #e2e8f4; --muted: #4b5a72; --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+            --bg: #07090f;
+            --surface: #0e1119;
+            --surface2: #141820;
+            --border: #1c2333;
+            --accent: #00e5ff;
+            --purple: #7c3aed;
+            --text: #e2e8f4;
+            --muted: #4b5a72;
+            --green: #10b981;
+            --red: #ef4444;
+            --amber: #f59e0b;
         }
         
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
         
-        @keyframes up { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
-        @keyframes scan { 0%{top:-2px;opacity:.5} 100%{top:100%;opacity:0} }
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+        
+        @keyframes up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+        
+        .animate-up { animation: up 0.4s ease both; }
+        .badge { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; display: inline-block; }
+        .badge-green { background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.35); color: #10b981; }
+        .badge-amber { background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.35); color: #f59e0b; }
+        .badge-red { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35); color: #ef4444; }
+        .badge-cyan { background: rgba(0,229,255,.12); border: 1px solid rgba(0,229,255,.35); color: #00e5ff; }
+        
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; transition: transform .2s, box-shadow .2s; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,229,255,.07); }
+        
+        .btn-nav { display: flex; align-items: center; gap: 16px; padding: 20px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; text-align: left; transition: all .2s; font-family: inherit; width: 100%; color: var(--text); }
+        .btn-nav:hover { border-color: rgba(0,229,255,.4); background: #0f1622; transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,229,255,.07); }
+        
+        .row-item { display: flex; align-items: center; gap: 14px; padding: 13px 18px; background: var(--surface2); border-radius: 11px; border: 1px solid var(--border); transition: background .2s; }
+        .row-item:hover { background: #181f2e; }
+        
+        button { font-family: inherit; cursor: pointer; }
+        input, textarea { font-family: inherit; outline: none; }
+        
+        .page-container { max-width: 800px; margin: 0 auto; padding: 24px 16px 50px; }
+        .main-menu { min-height: calc(100vh - 52px); display: flex; align-items: center; justify-content: center; padding: 32px 20px; }
+        .grid-buttons { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        
+        @media (max-width: 600px) {
+            .grid-buttons { grid-template-columns: 1fr; }
+            .page-container { padding: 20px 16px 40px; }
+        }
+        
+        .stat-grid { display: grid; gap: 12px; margin-bottom: 28px; }
+        .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; max-height: 50vh; }
+        .message-user { justify-content: flex-end; }
+        .message-assistant { justify-content: flex-start; }
+        .bubble-user { background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.2); border-radius: 16px 16px 4px 16px; }
+        .bubble-assistant { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px 16px 16px 4px; }
     </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="app"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/babel-standalone@6.26.0/babel.min.js"></script>
-
-<script type="text/babel" data-presets="react,stage-3">
-const { useState, useEffect, useRef } = React;
-
+<script>
+// Data
 const NAV = [
   { id: "trending", icon: "🔥", label: "Trending Products", desc: "Se hvad der sælger mest lige nu" },
   { id: "profit", icon: "💰", label: "Profit Analysis", desc: "Find de mest profitable produkter" },
@@ -45,411 +87,420 @@ const NAV = [
   { id: "dashboard", icon: "📊", label: "Dashboard", desc: "Komplet overblik over markedet" },
 ];
 
-function Badge({ children, color }) {
-  const colorMap = { 
-    green: ["rgba(16,185,129,.12)","rgba(16,185,129,.35)","#10b981"], 
-    amber: ["rgba(245,158,11,.12)","rgba(245,158,11,.35)","#f59e0b"], 
-    red: ["rgba(239,68,68,.12)","rgba(239,68,68,.35)","#ef4444"], 
-    cyan: ["rgba(0,229,255,.12)","rgba(0,229,255,.35)","#00e5ff"], 
-    purple: ["rgba(124,58,237,.12)","rgba(124,58,237,.35)","#a78bfa"] 
-  };
-  const c = colorMap[color] || colorMap.cyan;
-  return React.createElement("span", { style: { padding: "3px 9px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: c[0], border: "1px solid " + c[1], color: c[2], letterSpacing: ".04em", textTransform: "uppercase" } }, children);
+const trendingProducts = [
+  { rank: 1, name: "Nike Tech Fleece Jogger", brand: "Nike", profit: "High", speed: "Fast", category: "Sportswear" },
+  { rank: 2, name: "Adidas Samba OG", brand: "Adidas", profit: "High", speed: "Fast", category: "Sneakers" },
+  { rank: 3, name: "Vintage Levi's 501", brand: "Levi's", profit: "High", speed: "Fast", category: "Denim" },
+  { rank: 4, name: "New Balance 550", brand: "New Balance", profit: "High", speed: "Fast", category: "Sneakers" },
+  { rank: 5, name: "Carhartt WIP Jacket", brand: "Carhartt", profit: "Medium", speed: "Fast", category: "Outerwear" },
+  { rank: 6, name: "Stüssy Hoodie", brand: "Stüssy", profit: "High", speed: "Fast", category: "Streetwear" },
+  { rank: 7, name: "Ralph Lauren Polo (Vintage)", brand: "Ralph Lauren", profit: "Medium", speed: "Medium", category: "Classics" },
+  { rank: 8, name: "Jordan 1 Retro High", brand: "Jordan", profit: "High", speed: "Fast", category: "Sneakers" },
+  { rank: 9, name: "The North Face Nuptse", brand: "TNF", profit: "High", speed: "Medium", category: "Outerwear" },
+  { rank: 10, name: "Arc'teryx Beta Jacket", brand: "Arc'teryx", profit: "High", speed: "Medium", category: "Outerwear" },
+];
+
+const profitItems = [
+  { name: "Levi's 501 Vintage", buy: "50-100", sell: "200-400", margin: "+212%", profit: "High" },
+  { name: "Jordan 1 Retro High OG", buy: "800", sell: "1800", margin: "+125%", profit: "High" },
+  { name: "Adidas Samba OG White", buy: "400", sell: "850", margin: "+112%", profit: "High" },
+  { name: "Nike Tech Fleece Set", buy: "300", sell: "600", margin: "+100%", profit: "High" },
+  { name: "Stüssy 8-Ball Fleece", buy: "500", sell: "900", margin: "+80%", profit: "High" },
+];
+
+const sellSpeedItems = [
+  { name: "Adidas Samba OG", days: "1-2 dage", speed: "Fast", color: "green" },
+  { name: "Jordan 1 Retro High", days: "1-3 dage", speed: "Fast", color: "green" },
+  { name: "Nike Tech Fleece", days: "2-4 dage", speed: "Fast", color: "green" },
+  { name: "Levi's 501 Vintage", days: "1-3 dage", speed: "Fast", color: "green" },
+  { name: "New Balance 550", days: "5-10 dage", speed: "Medium", color: "amber" },
+];
+
+const brandsList = [
+  { name: "Levi's", score: 98, tier: "S", note: "Vintage 501 er guld" },
+  { name: "Nike", score: 96, tier: "S", note: "Tech Fleece sælger lynhurtigt" },
+  { name: "Adidas", score: 94, tier: "S", note: "Samba er HOT" },
+  { name: "Arc'teryx", score: 93, tier: "S", note: "Premium brand, høj profit" },
+  { name: "Stüssy", score: 91, tier: "A", note: "Collaborations giver profit" },
+];
+
+// State
+let currentPage = null;
+let apiKey = null;
+let chatMessages = [{ role: "assistant", content: "👋 Hej! Jeg er Vinted AI.\n\nSpørg mig om:\n• 🔥 Hvad sælger bedst?\n• 💰 Mest profitable produkter?\n• ⚡ Hvad sælger hurtigst?\n• 🏆 Hvilke brands er trending?" }];
+let chatInput = "";
+let chatLoading = false;
+
+function getBadgeClass(color) {
+  if (color === "High" || color === "Fast" || color === "green") return "badge-green";
+  if (color === "Medium" || color === "amber") return "badge-amber";
+  if (color === "Low" || color === "Slow" || color === "red") return "badge-red";
+  return "badge-cyan";
 }
 
-function Card({ children, style = {}, delay = 0 }) {
-  const [hover, setHover] = React.useState(false);
-  return React.createElement("div", { 
-    style: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: 20, animation: "up .45s ease " + delay + "s both", transition: "transform .2s, box-shadow .2s", ...style, transform: hover ? "translateY(-2px)" : "none", boxShadow: hover ? "0 8px 32px rgba(0,229,255,.07)" : "none" },
-    onMouseEnter: function() { setHover(true); },
-    onMouseLeave: function() { setHover(false); }
-  }, children);
+function renderBadge(text, color) {
+  return `<span class="badge ${getBadgeClass(color)}">${text}</span>`;
 }
 
-function Row({ rank, name, brand, profit, speed, category, delay = 0 }) {
-  const sc = { Fast: "green", Medium: "amber", Slow: "red" }[speed];
-  const pc = { High: "green", Medium: "amber", Low: "red" }[profit];
-  const [hover, setHover] = React.useState(false);
-  return React.createElement("div", { 
-    style: { display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", background: hover ? "#181f2e" : "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: "up .4s ease " + delay + "s both", transition: "background .2s" },
-    onMouseEnter: function() { setHover(true); },
-    onMouseLeave: function() { setHover(false); }
-  }, 
-    React.createElement("div", { style: { width: 26, height: 26, borderRadius: 7, background: "rgba(0,229,255,.07)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "var(--accent)", flexShrink: 0 } }, rank),
-    React.createElement("div", { style: { flex: 1, minWidth: 0 } }, 
-      React.createElement("div", { style: { fontWeight: 600, fontSize: 14 } }, name),
-      React.createElement("div", { style: { fontSize: 12, color: "var(--muted)", marginTop: 2 } }, brand + " · " + category)
-    ),
-    React.createElement("div", { style: { display: "flex", gap: 7, flexShrink: 0 } }, 
-      React.createElement(Badge, { color: pc }, profit),
-      React.createElement(Badge, { color: sc }, speed)
-    )
-  );
+function renderTrendingPage() {
+  let html = `
+    <div class="animate-up" style="margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+        <span style="font-size: 24px;">🔥</span>
+        <h1 style="font-family: Syne; font-size: 24px; font-weight: 800;">Trending Products</h1>
+      </div>
+      <div style="font-size: 13px; color: var(--muted); padding-left: 34px;">De mest efterspurgte produkter på Vinted lige nu</div>
+      <div style="height: 1px; margin-top: 16px; background: linear-gradient(90deg, rgba(0,229,255,.35), transparent);"></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;">
+      <div class="card" style="text-align: center; padding: 16px;"><div style="font-size: 22px;">📦</div><div style="font-size: 20px; font-weight: 800; font-family: Syne; color: var(--accent);">847</div><div style="font-size: 11px; color: var(--muted);">Trending Items</div></div>
+      <div class="card" style="text-align: center; padding: 16px;"><div style="font-size: 22px;">⬆️</div><div style="font-size: 20px; font-weight: 800; font-family: Syne; color: var(--green);">+23%</div><div style="font-size: 11px; color: var(--muted);">Vækst uge</div></div>
+      <div class="card" style="text-align: center; padding: 16px;"><div style="font-size: 22px;">🔥</div><div style="font-size: 20px; font-weight: 800; font-family: Syne; color: var(--amber);">Sneakers</div><div style="font-size: 11px; color: var(--muted);">Hot Kategori</div></div>
+      <div class="card" style="text-align: center; padding: 16px;"><div style="font-size: 22px;">⚡</div><div style="font-size: 20px; font-weight: 800; font-family: Syne; color: var(--accent);">2 dage</div><div style="font-size: 11px; color: var(--muted);">Avg Salgstid</div></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      ${trendingProducts.map(p => `
+        <div class="row-item animate-up">
+          <div style="width: 26px; height: 26px; border-radius: 7px; background: rgba(0,229,255,.07); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--accent);">${p.rank}</div>
+          <div style="flex: 1;"><div style="font-weight: 600; font-size: 14px;">${p.name}</div><div style="font-size: 12px; color: var(--muted);">${p.brand} · ${p.category}</div></div>
+          <div style="display: flex; gap: 7px;">${renderBadge(p.profit, p.profit)}${renderBadge(p.speed, p.speed)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  return html;
 }
 
-function PageTitle({ icon, title, sub }) {
-  return React.createElement("div", { style: { marginBottom: 28, animation: "up .4s ease both" } },
-    React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 4 } },
-      React.createElement("span", { style: { fontSize: 24 } }, icon),
-      React.createElement("h1", { style: { fontFamily: "Syne", fontSize: 24, fontWeight: 800 } }, title)
-    ),
-    React.createElement("div", { style: { fontSize: 13, color: "var(--muted)", paddingLeft: 34 } }, sub),
-    React.createElement("div", { style: { height: 1, marginTop: 16, background: "linear-gradient(90deg, rgba(0,229,255,.35), transparent)" } })
-  );
+function renderProfitPage() {
+  return `
+    <div class="animate-up" style="margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;"><span style="font-size: 24px;">💰</span><h1 style="font-family: Syne; font-size: 24px; font-weight: 800;">Profit Analysis</h1></div>
+      <div style="font-size: 13px; color: var(--muted); padding-left: 34px;">Estimeret profit per produkt</div>
+      <div style="height: 1px; margin-top: 16px; background: linear-gradient(90deg, rgba(0,229,255,.35), transparent);"></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;">
+      <div class="card" style="text-align: center; padding: 16px;"><div style="font-size: 22px;">💰</div><div style="font-size: 20px; font-weight: 800; color: var(--green);">94%</div><div style="font-size: 11px;">Avg Profit</div></div>
+      <div class="card" style="text-align: center; padding: 16px;"><div style="font-size: 22px;">🔝</div><div style="font-size: 20px; font-weight: 800; color: var(--amber);">Levi's</div><div style="font-size: 11px;">Bedste Flip</div></div>
+      <div class="card" style="text-align: center; padding: 16px;"><div style="font-size: 22px;">📊</div><div style="font-size: 20px; font-weight: 800; color: var(--accent);">67%</div><div style="font-size: 11px;">High Profit</div></div>
+      <div class="card" style="text-align: center; padding: 16px;"><div style="font-size: 22px;">💵</div><div style="font-size: 20px; font-weight: 800; color: var(--green);">480 kr</div><div style="font-size: 11px;">Avg Fortjeneste</div></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      ${profitItems.map((it, i) => `
+        <div class="row-item animate-up">
+          <div style="width: 26px; height: 26px; border-radius: 7px; background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--green);">${i+1}</div>
+          <div style="flex: 1;"><div style="font-weight: 600;">${it.name}</div><div style="font-size: 12px; color: var(--muted);">Køb: ~${it.buy} kr · Sælg: ~${it.sell} kr</div></div>
+          <div style="display: flex; gap: 10px; align-items: center;"><span style="font-size: 15px; font-weight: 700; color: var(--green);">${it.margin}</span>${renderBadge(it.profit, it.profit)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
-function StatRow({ stats }) {
-  const colorMap = { cyan: "var(--accent)", green: "var(--green)", amber: "var(--amber)", red: "var(--red)", purple: "#a78bfa" };
-  return React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(" + stats.length + ", 1fr)", gap: 12, marginBottom: 28 } },
-    stats.map(function(s, i) {
-      return React.createElement(Card, { key: i, delay: i * 0.05, style: { textAlign: "center", padding: 16 } },
-        React.createElement("div", { style: { fontSize: 22, marginBottom: 6 } }, s.icon),
-        React.createElement("div", { style: { fontSize: 20, fontWeight: 800, fontFamily: "Syne", color: colorMap[s.color] || "var(--text)" } }, s.value),
-        React.createElement("div", { style: { fontSize: 11, color: "var(--muted)", marginTop: 3 } }, s.label)
-      );
-    })
-  );
+function renderSellSpeedPage() {
+  return `
+    <div class="animate-up" style="margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 24px;">⚡</span><h1 style="font-family: Syne; font-size: 24px; font-weight: 800;">Sell Speed</h1></div>
+      <div style="font-size: 13px; color: var(--muted); padding-left: 34px;">Estimeret salgshastighed</div>
+      <div style="height: 1px; margin-top: 16px; background: linear-gradient(90deg, rgba(0,229,255,.35), transparent);"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      ${sellSpeedItems.map(it => `
+        <div class="row-item animate-up">
+          <div style="width: 9px; height: 9px; border-radius: 50%; background: var(--${it.color}); box-shadow: 0 0 7px var(--${it.color});"></div>
+          <div style="flex: 1; font-weight: 600;">${it.name}</div>
+          <div style="font-size: 12px; color: var(--muted);">${it.days}</div>
+          ${renderBadge(it.speed, it.speed)}
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
-function TrendingPage() {
-  const products = [
-    { name: "Nike Tech Fleece Jogger", brand: "Nike", profit: "High", speed: "Fast", category: "Sportswear" },
-    { name: "Adidas Samba OG", brand: "Adidas", profit: "High", speed: "Fast", category: "Sneakers" },
-    { name: "Vintage Levi's 501", brand: "Levi's", profit: "High", speed: "Fast", category: "Denim" },
-    { name: "New Balance 550", brand: "New Balance", profit: "High", speed: "Fast", category: "Sneakers" },
-    { name: "Carhartt WIP Jacket", brand: "Carhartt", profit: "Medium", speed: "Fast", category: "Outerwear" },
-    { name: "Stüssy Hoodie", brand: "Stüssy", profit: "High", speed: "Fast", category: "Streetwear" },
-    { name: "Ralph Lauren Polo (Vintage)", brand: "Ralph Lauren", profit: "Medium", speed: "Medium", category: "Classics" },
-    { name: "Jordan 1 Retro High", brand: "Jordan", profit: "High", speed: "Fast", category: "Sneakers" },
-    { name: "The North Face Nuptse", brand: "TNF", profit: "High", speed: "Medium", category: "Outerwear" },
-    { name: "Arc'teryx Beta Jacket", brand: "Arc'teryx", profit: "High", speed: "Medium", category: "Outerwear" },
-  ];
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "🔥", title: "Trending Products", sub: "De mest efterspurgte produkter på Vinted lige nu" }),
-    React.createElement(StatRow, { stats: [{ icon: "📦", label: "Trending Items", value: "847", color: "cyan" }, { icon: "⬆️", label: "Vækst uge", value: "+23%", color: "green" }, { icon: "🔥", label: "Hot Kategori", value: "Sneakers", color: "amber" }, { icon: "⚡", label: "Avg Salgstid", value: "2 dage", color: "cyan" }] }),
-    React.createElement("div", { style: { fontSize: 12, fontWeight: 600, color: "var(--muted)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 } }, "Top 10 Trending Nu"),
-    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, products.map(function(p, i) { return React.createElement(Row, { key: i, rank: i + 1, name: p.name, brand: p.brand, profit: p.profit, speed: p.speed, category: p.category, delay: i * 0.04 }); }))
-  );
+function renderMarketPage() {
+  return `
+    <div class="animate-up" style="margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 24px;">📈</span><h1 style="font-family: Syne; font-size: 24px; font-weight: 800;">Market Trends</h1></div>
+      <div style="font-size: 13px; color: var(--muted); padding-left: 34px;">Aktuelle markedsbevægelser</div>
+      <div style="height: 1px; margin-top: 16px; background: linear-gradient(90deg, rgba(0,229,255,.35), transparent);"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      <div class="row-item"><span style="font-size: 20px;">📈</span><div style="flex:1;"><div style="font-weight:600;">Vintage Denim</div><div style="font-size:12px;color:var(--muted);">Levi's, Lee</div></div><div style="font-weight:700;color:var(--green);">+41%</div></div>
+      <div class="row-item"><span style="font-size: 20px;">📈</span><div style="flex:1;"><div style="font-weight:600;">Sneakers</div><div style="font-size:12px;color:var(--muted);">Nike, Adidas, NB</div></div><div style="font-weight:700;color:var(--green);">+34%</div></div>
+      <div class="row-item"><span style="font-size: 20px;">📈</span><div style="flex:1;"><div style="font-weight:600;">Streetwear</div><div style="font-size:12px;color:var(--muted);">Stüssy, Carhartt</div></div><div style="font-weight:700;color:var(--green);">+28%</div></div>
+      <div class="row-item"><span style="font-size: 20px;">📉</span><div style="flex:1;"><div style="font-weight:600;">Fast Fashion</div><div style="font-size:12px;color:var(--muted);">Zara, H&M</div></div><div style="font-weight:700;color:var(--red);">-18%</div></div>
+    </div>
+  `;
 }
 
-function ProfitPage() {
-  const items = [
-    { name: "Levi's 501 Vintage", buy: "50-100", sell: "200-400", profit: "High", margin: "+212%" },
-    { name: "Jordan 1 Retro High OG", buy: "800", sell: "1800", profit: "High", margin: "+125%" },
-    { name: "Adidas Samba OG White", buy: "400", sell: "850", profit: "High", margin: "+112%" },
-    { name: "Nike Tech Fleece Set", buy: "300", sell: "600", profit: "High", margin: "+100%" },
-    { name: "Stüssy 8-Ball Fleece", buy: "500", sell: "900", profit: "High", margin: "+80%" },
-    { name: "Arc'teryx Beta AR", buy: "1500", sell: "2500", profit: "High", margin: "+67%" },
-    { name: "Ralph Lauren Polo (Vintage)", buy: "60", sell: "160", profit: "Medium", margin: "+167%" },
-    { name: "Carhartt Detroit Jacket", buy: "400", sell: "650", profit: "Medium", margin: "+62%" },
-    { name: "New Balance 550", buy: "700", sell: "1050", profit: "Medium", margin: "+50%" },
-    { name: "The North Face Nuptse", buy: "800", sell: "1200", profit: "Medium", margin: "+50%" },
-  ];
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "💰", title: "Profit Analysis", sub: "Estimeret profit per produkt baseret på aktuelle markedspriser" }),
-    React.createElement(StatRow, { stats: [{ icon: "💰", label: "Avg Profit", value: "94%", color: "green" }, { icon: "🔝", label: "Bedste Flip", value: "Levi's 501", color: "amber" }, { icon: "📊", label: "High Profit Items", value: "67%", color: "cyan" }, { icon: "💵", label: "Avg Fortjeneste", value: "480 kr", color: "green" }] }),
-    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, items.map(function(it, i) {
-      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: "up .4s ease " + (i * 0.04) + "s both", flexWrap: "wrap" } },
-        React.createElement("div", { style: { width: 26, height: 26, borderRadius: 7, background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "var(--green)", flexShrink: 0 } }, i + 1),
-        React.createElement("div", { style: { flex: 1, minWidth: 120 } },
-          React.createElement("div", { style: { fontWeight: 600, fontSize: 14 } }, it.name),
-          React.createElement("div", { style: { fontSize: 12, color: "var(--muted)", marginTop: 2 } }, "Køb: ~" + it.buy + " kr · Sælg: ~" + it.sell + " kr")
-        ),
-        React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", flexShrink: 0 } },
-          React.createElement("span", { style: { fontSize: 15, fontWeight: 700, color: "var(--green)" } }, it.margin),
-          React.createElement(Badge, { color: it.profit === "High" ? "green" : "amber" }, it.profit)
-        )
-      );
-    }))
-  );
+function renderBestBuyPage() {
+  return `
+    <div class="animate-up" style="margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 24px;">🛒</span><h1 style="font-family: Syne; font-size: 24px; font-weight: 800;">Best Products To Buy</h1></div>
+      <div style="font-size: 13px; color: var(--muted); padding-left: 34px;">Anbefalede produkter at købe og flippe</div>
+      <div style="height: 1px; margin-top: 16px; background: linear-gradient(90deg, rgba(0,229,255,.35), transparent);"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="card animate-up"><div style="font-weight:700;">Levi's 501 Jeans</div><div style="font-size:12px;"><span style="color:var(--red);">Køb: 50-100 kr</span> → <span style="color:var(--green);">Sælg: 200-400 kr</span></div><div style="font-size:11px;color:var(--muted);">📍 Loppemarkeder</div>${renderBadge("Low Risk", "green")}</div>
+      <div class="card animate-up"><div style="font-weight:700;">Adidas Samba (hvid)</div><div style="font-size:12px;"><span style="color:var(--red);">Køb: 350-500 kr</span> → <span style="color:var(--green);">Sælg: 700-1000 kr</span></div><div style="font-size:11px;color:var(--muted);">📍 Vinted</div>${renderBadge("Low Risk", "green")}</div>
+      <div class="card animate-up"><div style="font-weight:700;">Carhartt WIP Jakke</div><div style="font-size:12px;"><span style="color:var(--red);">Køb: 300-500 kr</span> → <span style="color:var(--green);">Sælg: 700-1100 kr</span></div><div style="font-size:11px;color:var(--muted);">📍 Depop</div>${renderBadge("Medium Risk", "amber")}</div>
+    </div>
+  `;
 }
 
-function SellSpeedPage() {
-  const items = [
-    { name: "Adidas Samba OG", speed: "Fast", days: "1-2 dage", c: "green" },
-    { name: "Jordan 1 Retro High", speed: "Fast", days: "1-3 dage", c: "green" },
-    { name: "Nike Tech Fleece", speed: "Fast", days: "2-4 dage", c: "green" },
-    { name: "Levi's 501 Vintage", speed: "Fast", days: "1-3 dage", c: "green" },
-    { name: "Stüssy Hoodie", speed: "Fast", days: "2-5 dage", c: "green" },
-    { name: "New Balance 550", speed: "Medium", days: "5-10 dage", c: "amber" },
-    { name: "Carhartt WIP Jakke", speed: "Medium", days: "4-8 dage", c: "amber" },
-    { name: "Arc'teryx Jakke", speed: "Medium", days: "7-14 dage", c: "amber" },
-  ];
-  const glowColor = { green: "var(--green)", amber: "var(--amber)", red: "var(--red)" };
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "⚡", title: "Sell Speed", sub: "Estimeret salgshastighed for populære produkter" }),
-    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, items.map(function(it, i) {
-      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: "up .4s ease " + (i * 0.04) + "s both" } },
-        React.createElement("div", { style: { width: 9, height: 9, borderRadius: "50%", background: glowColor[it.c], boxShadow: "0 0 7px " + glowColor[it.c], flexShrink: 0 } }),
-        React.createElement("div", { style: { flex: 1, fontWeight: 600, fontSize: 14 } }, it.name),
-        React.createElement("div", { style: { fontSize: 12, color: "var(--muted)" } }, it.days),
-        React.createElement(Badge, { color: it.c }, it.speed)
-      );
-    }))
-  );
+function renderBrandsPage() {
+  const tierColors = { S: "#f59e0b", A: "#00e5ff", B: "#a78bfa" };
+  return `
+    <div class="animate-up" style="margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 24px;">🏆</span><h1 style="font-family: Syne; font-size: 24px; font-weight: 800;">Best Brands</h1></div>
+      <div style="font-size: 13px; color: var(--muted); padding-left: 34px;">Top brands til resale</div>
+      <div style="height: 1px; margin-top: 16px; background: linear-gradient(90deg, rgba(0,229,255,.35), transparent);"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      ${brandsList.map(b => `
+        <div class="row-item animate-up">
+          <div style="width: 34px; height: 34px; border-radius: 9px; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.35); display: flex; align-items: center; justify-content: center; font-weight: 800; color: ${tierColors[b.tier]}; font-size: 14px;">${b.tier}</div>
+          <div style="flex:1;"><div style="font-weight:700;">${b.name}</div><div style="font-size:11px;color:var(--muted);">${b.note}</div></div>
+          <div style="text-align:right;"><div style="font-weight:700;color:var(--accent);">${b.score}/100</div></div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
-function ChatPage({ apiKey }) {
-  const [messages, setMessages] = useState([{ role: "assistant", content: "👋 Hej! Jeg er Vinted AI.\n\nSpørg mig om:\n• 🔥 Hvad sælger bedst?\n• 💰 Mest profitable produkter?\n• ⚡ Hvad sælger hurtigst?\n• 🏆 Hvilke brands er trending?" }]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const bottomRef = useRef(null);
-  const suggestions = ["Hvad sælger bedst nu?", "Bedste sneakers at flippe?", "Hvad skal jeg købe for 500 kr?", "Hvilke brands er hot?"];
+function renderDashboardPage() {
+  return `
+    <div class="animate-up" style="margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 24px;">📊</span><h1 style="font-family: Syne; font-size: 24px; font-weight: 800;">Dashboard</h1></div>
+      <div style="font-size: 13px; color: var(--muted); padding-left: 34px;">Komplet overblik over markedet</div>
+      <div style="height: 1px; margin-top: 16px; background: linear-gradient(90deg, rgba(0,229,255,.35), transparent);"></div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;">
+      <div class="card" style="text-align: center;"><div style="font-size: 22px;">🔥</div><div style="font-size: 20px; font-weight: 800; color:var(--accent);">847</div><div style="font-size:11px;">Trending</div></div>
+      <div class="card" style="text-align: center;"><div style="font-size: 22px;">💰</div><div style="font-size: 20px; font-weight: 800; color:var(--green);">94%</div><div style="font-size:11px;">Avg Profit</div></div>
+      <div class="card" style="text-align: center;"><div style="font-size: 22px;">⚡</div><div style="font-size: 20px; font-weight: 800; color:var(--amber);">62%</div><div style="font-size:11px;">Fast Sellers</div></div>
+      <div class="card" style="text-align: center;"><div style="font-size: 22px;">📈</div><div style="font-size: 20px; font-weight: 800; color:var(--green);">+23%</div><div style="font-size:11px;">Vækst</div></div>
+    </div>
+    <div style="font-size:12px; font-weight:600; color:var(--muted); margin-bottom:12px;">🏆 Top 3 Lige Nu</div>
+    <div style="display: flex; flex-direction: column; gap: 9px;">
+      ${trendingProducts.slice(0, 3).map(p => `
+        <div class="row-item animate-up">
+          <div style="width:26px; height:26px; border-radius:7px; background:rgba(0,229,255,.07); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--accent);">${p.rank}</div>
+          <div style="flex:1;"><div style="font-weight:600;">${p.name}</div><div style="font-size:12px;color:var(--muted);">${p.brand}</div></div>
+          <div style="display:flex; gap:7px;">${renderBadge(p.profit, p.profit)}${renderBadge(p.speed, p.speed)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
 
-  useEffect(function() { 
-    if (bottomRef.current) { bottomRef.current.scrollIntoView({ behavior: "smooth" }); }
-  }, [messages]);
-
-  const send = function(text) {
-    const q = (text || input).trim();
-    if (!q || loading) return;
-    setInput("");
-    const history = messages.concat([{ role: "user", content: q }]);
-    setMessages(history);
-    setLoading(true);
+function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if (!message || chatLoading) return;
+  input.value = '';
+  
+  const messagesDiv = document.getElementById('chatMessages');
+  const userMsgDiv = document.createElement('div');
+  userMsgDiv.className = 'message-user';
+  userMsgDiv.style.display = 'flex';
+  userMsgDiv.style.justifyContent = 'flex-end';
+  userMsgDiv.style.marginBottom = '14px';
+  userMsgDiv.innerHTML = `<div style="max-width:75%; padding:12px 16px; background:rgba(0,229,255,.07); border:1px solid rgba(0,229,255,.2); border-radius:16px 16px 4px 16px; font-size:14px;">${message}</div>`;
+  messagesDiv.appendChild(userMsgDiv);
+  
+  const loadingDiv = document.createElement('div');
+  loadingDiv.id = 'chatLoading';
+  loadingDiv.style.display = 'flex';
+  loadingDiv.style.gap = '9px';
+  loadingDiv.style.alignItems = 'center';
+  loadingDiv.style.marginBottom = '14px';
+  loadingDiv.innerHTML = `<div style="width:30px; height:30px; border-radius:9px; background:linear-gradient(135deg, rgba(0,229,255,.12), rgba(124,58,237,.12)); border:1px solid rgba(0,229,255,.2); display:flex; align-items:center; justify-content:center; font-size:15px;">🤖</div><div style="display:flex; gap:5px; padding:12px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:16px 16px 16px 4px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--accent); animation:pulse 1.2s ease 0s infinite"></div><div style="width:7px; height:7px; border-radius:50%; background:var(--accent); animation:pulse 1.2s ease 0.2s infinite"></div><div style="width:7px; height:7px; border-radius:50%; background:var(--accent); animation:pulse 1.2s ease 0.4s infinite"></div></div>`;
+  messagesDiv.appendChild(loadingDiv);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  
+  chatLoading = true;
+  
+  setTimeout(() => {
+    const mockReplies = [
+      "🔥 TOP PRODUCTS: Adidas Samba, Nike Tech Fleece, Levi's 501 Vintage\n💰 PROFIT: High (60-120%)\n⚡ SELL SPEED: Fast (1-3 dage)",
+      "Bedste sneakers at flippe: Jordan 1 Retro, Adidas Samba, New Balance 550. Køb limited editions!",
+      "Med 500 kr: Køb 2-3 vintage Ralph Lauren poloer (40-80 kr/stk). Sælg for 150-300 kr hver = profit!",
+      "🏆 HOTTEST BRANDS: Levi's (S-tier), Nike (S-tier), Adidas (S-tier), Arc'teryx (S-tier)"
+    ];
+    const reply = mockReplies[Math.floor(Math.random() * mockReplies.length)];
     
-    setTimeout(function() {
-      const mockReplies = [
-        "🔥 TOP PRODUCTS lige nu: Adidas Samba, Nike Tech Fleece, Levi's 501 Vintage\n💰 PROFIT: High (60-120% margin)\n⚡ SELL SPEED: Fast (1-3 dage)\n📌 TIPS: Køb vintage Levi's på loppemarkeder for 50-100 kr, sælg for 300-500 kr!",
-        "Bedste sneakers at flippe: Jordan 1 Retro (High profit), Adidas Samba (hurtig sale), New Balance 550 (stigende trend). Køb limited editions og hold dem i original æske.",
-        "Med 500 kr: Køb 2-3 vintage Ralph Lauren poloer (40-80 kr/stk) eller Levi's 501 jeans. Sælg for 150-300 kr hver = 300-900 kr profit. Alternativt: Carhartt beanies eller Stüssy t-shirts.",
-        "🏆 HOTTEST BRANDS: Levi's (S-tier), Nike (S-tier), Adidas (S-tier), Arc'teryx (S-tier), Stüssy (A-tier), Carhartt WIP (A-tier). Vintage udgaver giver højest profit!"
-      ];
-      const reply = mockReplies[Math.floor(Math.random() * mockReplies.length)];
-      setMessages(function(m) { return m.concat([{ role: "assistant", content: reply }]); });
-      setLoading(false);
-    }, 800);
-  };
-
-  return React.createElement("div", { style: { display: "flex", flexDirection: "column", height: "calc(100vh - 130px)", minHeight: 400 } },
-    React.createElement(PageTitle, { icon: "🤖", title: "AI Chat", sub: "Stil spørgsmål til din personlige resale AI" }),
-    React.createElement("div", { style: { display: "flex", gap: 7, flexWrap: "wrap", marginBottom: 16 } }, suggestions.map(function(s, i) {
-      return React.createElement("button", { key: i, onClick: function() { send(s); }, style: { padding: "6px 13px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20, color: "var(--muted)", fontSize: 12, cursor: "pointer", transition: "all .2s", fontFamily: "inherit" } }, s);
-    })),
-    React.createElement("div", { style: { flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 14, marginBottom: 14, paddingRight: 4 } },
-      messages.map(function(m, i) {
-        return React.createElement("div", { key: i, style: { display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", animation: "up .3s ease both" } },
-          m.role === "assistant" ? React.createElement("div", { style: { width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg, rgba(0,229,255,.12), rgba(124,58,237,.12))", border: "1px solid rgba(0,229,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, marginRight: 9, marginTop: 3 } }, "🤖") : null,
-          React.createElement("div", { style: { maxWidth: "75%", padding: "12px 16px", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: m.role === "user" ? "rgba(0,229,255,.07)" : "var(--surface2)", border: "1px solid " + (m.role === "user" ? "rgba(0,229,255,.2)" : "var(--border)"), fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap" } }, m.content)
-        );
-      }),
-      loading ? React.createElement("div", { style: { display: "flex", gap: 9, alignItems: "center" } },
-        React.createElement("div", { style: { width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg, rgba(0,229,255,.12), rgba(124,58,237,.12))", border: "1px solid rgba(0,229,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 } }, "🤖"),
-        React.createElement("div", { style: { display: "flex", gap: 5, padding: "12px 16px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "16px 16px 16px 4px" } },
-          [0, 0.2, 0.4].map(function(d, idx) { return React.createElement("div", { key: idx, style: { width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", animation: "pulse 1.2s ease " + d + "s infinite" } }); })
-        )
-      ) : null,
-      React.createElement("div", { ref: bottomRef })
-    ),
-    React.createElement("div", { style: { display: "flex", gap: 9 } },
-      React.createElement("input", { value: input, onChange: function(e) { setInput(e.target.value); }, onKeyDown: function(e) { if (e.key === "Enter") send(); }, placeholder: "Stil et spørgsmål...", style: { flex: 1, padding: "13px 16px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text)", fontSize: 14, outline: "none", fontFamily: "inherit" } }),
-      React.createElement("button", { onClick: function() { send(); }, disabled: loading || !input.trim(), style: { padding: "13px 18px", background: input.trim() && !loading ? "linear-gradient(135deg,#00e5ff,#7c3aed)" : "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, color: input.trim() && !loading ? "#fff" : "var(--muted)", cursor: loading || !input.trim() ? "not-allowed" : "pointer", fontSize: 17 } }, "➤")
-    )
-  );
+    const loadingElem = document.getElementById('chatLoading');
+    if (loadingElem) loadingElem.remove();
+    
+    const assistantDiv = document.createElement('div');
+    assistantDiv.style.display = 'flex';
+    assistantDiv.style.gap = '9px';
+    assistantDiv.style.marginBottom = '14px';
+    assistantDiv.innerHTML = `<div style="width:30px; height:30px; border-radius:9px; background:linear-gradient(135deg, rgba(0,229,255,.12), rgba(124,58,237,.12)); border:1px solid rgba(0,229,255,.2); display:flex; align-items:center; justify-content:center; font-size:15px;">🤖</div><div style="max-width:75%; padding:12px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:16px 16px 16px 4px; font-size:14px; white-space:pre-wrap;">${reply}</div>`;
+    messagesDiv.appendChild(assistantDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    chatLoading = false;
+  }, 800);
 }
 
-function MarketPage() {
-  const trends = [
-    { cat: "Vintage Denim", change: "+41%", up: true, brands: "Levi's, Lee, Wrangler" },
-    { cat: "Sneakers", change: "+34%", up: true, brands: "Nike, Adidas, NB" },
-    { cat: "Streetwear", change: "+28%", up: true, brands: "Stüssy, Carhartt, Supreme" },
-    { cat: "Outdoor/Technical", change: "+22%", up: true, brands: "Arc'teryx, TNF, Patagonia" },
-  ];
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "📈", title: "Market Trends", sub: "Aktuelle markedsbevægelser og kategori vækst" }),
-    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, trends.map(function(t, i) {
-      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: "up .4s ease " + (i * 0.05) + "s both" } },
-        React.createElement("span", { style: { fontSize: 20 } }, t.up ? "📈" : "📉"),
-        React.createElement("div", { style: { flex: 1 } },
-          React.createElement("div", { style: { fontWeight: 600, fontSize: 14 } }, t.cat),
-          React.createElement("div", { style: { fontSize: 12, color: "var(--muted)", marginTop: 2 } }, t.brands)
-        ),
-        React.createElement("div", { style: { fontWeight: 700, fontSize: 16, color: t.up ? "var(--green)" : "var(--red)" } }, t.change)
-      );
-    }))
-  );
+function renderChatPage() {
+  return `
+    <div class="animate-up" style="margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 24px;">🤖</span><h1 style="font-family: Syne; font-size: 24px; font-weight: 800;">AI Chat</h1></div>
+      <div style="font-size: 13px; color: var(--muted); padding-left: 34px;">Stil spørgsmål til din personlige resale AI</div>
+      <div style="height: 1px; margin-top: 16px; background: linear-gradient(90deg, rgba(0,229,255,.35), transparent);"></div>
+    </div>
+    <div style="display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px;">
+      <button onclick="document.getElementById('chatInput').value='Hvad sælger bedst nu?'; sendChatMessage();" style="padding:6px 13px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; color:var(--muted); font-size:12px;">Hvad sælger bedst nu?</button>
+      <button onclick="document.getElementById('chatInput').value='Bedste sneakers at flippe?'; sendChatMessage();" style="padding:6px 13px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; color:var(--muted); font-size:12px;">Bedste sneakers?</button>
+      <button onclick="document.getElementById('chatInput').value='Hvilke brands er hot?'; sendChatMessage();" style="padding:6px 13px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; color:var(--muted); font-size:12px;">Hvilke brands er hot?</button>
+    </div>
+    <div id="chatMessages" class="chat-messages" style="height: 45vh; overflow-y: auto; margin-bottom: 16px;">
+      <div style="display: flex; gap: 9px; margin-bottom: 14px;">
+        <div style="width:30px; height:30px; border-radius:9px; background:linear-gradient(135deg, rgba(0,229,255,.12), rgba(124,58,237,.12)); border:1px solid rgba(0,229,255,.2); display:flex; align-items:center; justify-content:center;">🤖</div>
+        <div style="max-width:75%; padding:12px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:16px 16px 16px 4px; font-size:14px; white-space:pre-wrap;">👋 Hej! Jeg er Vinted AI.\n\nSpørg mig om:\n• 🔥 Hvad sælger bedst?\n• 💰 Mest profitable produkter?\n• ⚡ Hvad sælger hurtigst?</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 9px;">
+      <input id="chatInput" type="text" placeholder="Stil et spørgsmål..." onkeypress="if(event.key==='Enter') sendChatMessage();" style="flex:1; padding:13px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:14px;">
+      <button onclick="sendChatMessage()" style="padding:13px 18px; background:linear-gradient(135deg,#00e5ff,#7c3aed); border:none; border-radius:12px; color:white; font-size:17px;">➤</button>
+    </div>
+  `;
 }
 
-function BestBuyPage() {
-  const items = [
-    { name: "Levi's 501 Jeans (W30 L32)", buy: "50-100 kr", sell: "200-400 kr", where: "Loppemarkeder, Genbrugsbutikker", risk: "Low" },
-    { name: "Nike Air Max 90 (str. 42-44)", buy: "200-400 kr", sell: "600-900 kr", where: "Facebook Marketplace, Vinted", risk: "Low" },
-    { name: "Adidas Samba (hvid)", buy: "350-500 kr", sell: "700-1000 kr", where: "Vinted, Lokal salg", risk: "Low" },
-    { name: "Carhartt WIP Jakke (S/M)", buy: "300-500 kr", sell: "700-1100 kr", where: "Vinted, Depop", risk: "Medium" },
-  ];
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "🛒", title: "Best Products To Buy", sub: "Anbefalede produkter at købe og sælge videre" }),
-    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, items.map(function(it, i) {
-      return React.createElement(Card, { key: i, delay: i * 0.05 },
-        React.createElement("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" } },
-          React.createElement("div", { style: { flex: 1, minWidth: 160 } },
-            React.createElement("div", { style: { fontWeight: 700, fontSize: 15, marginBottom: 6 } }, it.name),
-            React.createElement("div", { style: { display: "flex", gap: 14, flexWrap: "wrap" } },
-              React.createElement("div", { style: { fontSize: 12 } }, React.createElement("span", { style: { color: "var(--muted)" } }, "Køb: "), React.createElement("span", { style: { color: "var(--red)", fontWeight: 600 } }, it.buy)),
-              React.createElement("div", { style: { fontSize: 12 } }, React.createElement("span", { style: { color: "var(--muted)" } }, "Sælg: "), React.createElement("span", { style: { color: "var(--green)", fontWeight: 600 } }, it.sell))
-            ),
-            React.createElement("div", { style: { fontSize: 11, color: "var(--muted)", marginTop: 6 } }, "📍 " + it.where)
-          ),
-          React.createElement(Badge, { color: it.risk === "Low" ? "green" : "amber" }, "Risk: " + it.risk)
-        )
-      );
-    }))
-  );
+function renderMainMenu() {
+  return `
+    <div class="main-menu">
+      <div style="width:100%; max-width:700px;">
+        <div style="text-align:center; margin-bottom:32px; animation:up 0.5s ease both;">
+          <div style="font-size:34px; margin-bottom:8px;">👋</div>
+          <h1 style="font-family:Syne; font-size:26px; font-weight:800; margin-bottom:6px;">Hvad vil du analysere?</h1>
+          <p style="color:var(--muted); font-size:14px;">Tryk på en knap for at åbne siden</p>
+        </div>
+        <div class="grid-buttons">
+          ${NAV.map(n => `
+            <button class="btn-nav animate-up" onclick="navigateTo('${n.id}')">
+              <div style="width:50px; height:50px; border-radius:14px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:26px;">${n.icon}</div>
+              <div style="flex:1; text-align:left;"><div style="font-weight:700; font-size:16px; font-family:Syne; margin-bottom:4px;">${n.label}</div><div style="font-size:12px; color:var(--muted);">${n.desc}</div></div>
+              <div style="color:var(--muted); font-size:20px;">→</div>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
-function BrandsPage() {
-  const brands = [
-    { name: "Levi's", score: 98, cat: "Denim", note: "Vintage 501 er guld. Altid efterspurgt.", tier: "S" },
-    { name: "Nike", score: 96, cat: "Sneakers", note: "Tech Fleece og retro sneakers sælger lynhurtigt.", tier: "S" },
-    { name: "Adidas", score: 94, cat: "Sneakers", note: "Samba og Gazelle er HOT. Høj flip-value.", tier: "S" },
-    { name: "Arc'teryx", score: 93, cat: "Technical", note: "Premium brand — høj pris, høj profit.", tier: "S" },
-  ];
-  const tc = { S: ["rgba(245,158,11,.1)","rgba(245,158,11,.35)","#f59e0b"], A: ["rgba(0,229,255,.1)","rgba(0,229,255,.3)","#00e5ff"], B: ["rgba(124,58,237,.1)","rgba(124,58,237,.3)","#a78bfa"] };
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "🏆", title: "Best Brands", sub: "Top brands til resale — rangeret efter profit potentiale" }),
-    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, brands.map(function(b, i) {
-      const t = tc[b.tier];
-      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: "up .4s ease " + (i * 0.04) + "s both", flexWrap: "wrap" } },
-        React.createElement("div", { style: { width: 34, height: 34, borderRadius: 9, background: t[0], border: "1px solid " + t[1], display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: t[2], fontSize: 14, flexShrink: 0 } }, b.tier),
-        React.createElement("div", { style: { flex: 1, minWidth: 100 } },
-          React.createElement("div", { style: { fontWeight: 700, fontSize: 14 } }, b.name),
-          React.createElement("div", { style: { fontSize: 11, color: "var(--muted)", marginTop: 3 } }, b.note)
-        ),
-        React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } },
-          React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: "var(--accent)" } }, b.score + "/100"),
-          React.createElement("div", { style: { fontSize: 11, color: "var(--muted)" } }, b.cat)
-        )
-      );
-    }))
-  );
+function renderHeader() {
+  const title = currentPage ? (NAV.find(n => n.id === currentPage)?.label || '') : '';
+  return `
+    <header style="background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 16px; height:52px; position:sticky; top:0; z-index:50;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        ${currentPage ? `<button onclick="goBack()" style="width:32px; height:32px; border-radius:8px; background:var(--surface2); border:1px solid var(--border); cursor:pointer; color:var(--muted); font-size:18px; display:flex; align-items:center; justify-content:center;">←</button>` : ''}
+        <span style="font-family:Syne; font-weight:800; font-size:18px; background:linear-gradient(90deg,#00e5ff,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Vinted AI</span>
+        ${currentPage ? `<span style="font-size:12px; color:var(--muted);">/ ${title}</span>` : ''}
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:flex; align-items:center; gap:6px; padding:4px 10px; background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.2); border-radius:20px;">
+          <div style="width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s ease infinite;"></div>
+          <span style="font-size:10px; color:var(--green); font-weight:600;">AI Online</span>
+        </div>
+        <button onclick="logout()" style="padding:5px 10px; background:rgba(239,68,68,.07); border:1px solid rgba(239,68,68,.15); border-radius:7px; color:var(--red); font-size:11px; cursor:pointer;">Log ud</button>
+      </div>
+    </header>
+  `;
 }
 
-function DashboardPage() {
-  const top = [
-    { name: "Levi's 501 Vintage", brand: "Levi's", profit: "High", speed: "Fast", category: "Denim" },
-    { name: "Adidas Samba OG", brand: "Adidas", profit: "High", speed: "Fast", category: "Sneakers" },
-    { name: "Nike Tech Fleece", brand: "Nike", profit: "High", speed: "Fast", category: "Sportswear" },
-  ];
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "📊", title: "Dashboard", sub: "Komplet overblik over Vinted markedet" }),
-    React.createElement(StatRow, { stats: [{ icon: "🔥", label: "Trending Items", value: "847", color: "cyan" }, { icon: "💰", label: "Avg Profit", value: "94%", color: "green" }, { icon: "⚡", label: "Fast Sellers", value: "62%", color: "amber" }, { icon: "📈", label: "Vækst uge", value: "+23%", color: "green" }] }),
-    React.createElement("div", { style: { fontSize: 12, fontWeight: 600, color: "var(--muted)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 } }, "🏆 Top 3 Lige Nu"),
-    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9, marginBottom: 28 } }, top.map(function(p, i) { return React.createElement(Row, { key: i, rank: i + 1, name: p.name, brand: p.brand, profit: p.profit, speed: p.speed, category: p.category, delay: i * 0.05 }); }))
-  );
-}
-
-function LandingPage({ onStart }) {
-  const [key, setKey] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [d, setD] = useState("");
-
-  useEffect(function() {
-    if (!loading) return;
-    var t = setInterval(function() { setD(function(v) { return v.length >= 3 ? "" : v + "."; }); }, 500);
-    return function() { clearInterval(t); };
-  }, [loading]);
-
-  const go = function() {
-    setLoading(true);
-    setError("");
-    setTimeout(function() {
-      setLoading(false);
-      onStart("demo");
-    }, 1600);
-  };
-
-  return React.createElement("div", { style: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden", background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,229,255,.05), transparent), var(--bg)" } },
-    React.createElement("div", { style: { position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(28,35,51,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(28,35,51,.5) 1px, transparent 1px)", backgroundSize: "56px 56px", pointerEvents: "none" } }),
-    React.createElement("div", { style: { position: "relative", zIndex: 1, width: "100%", maxWidth: 440, padding: "0 20px", animation: "up .7s ease both" } },
-      React.createElement("div", { style: { textAlign: "center", marginBottom: 40 } },
-        React.createElement("div", { style: { fontSize: 48, marginBottom: 14 } }, "🤖"),
-        React.createElement("h1", { style: { fontFamily: "Syne", fontSize: 38, fontWeight: 800, background: "linear-gradient(90deg,#00e5ff,#a78bfa,#00e5ff)", backgroundSize: "200%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite", marginBottom: 10 } }, "Vinted AI"),
-        React.createElement("div", { style: { fontSize: 12, color: "var(--muted)", letterSpacing: ".12em", textTransform: "uppercase" } }, "Professional Resale Intelligence")
-      ),
-      React.createElement("div", { style: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: 30, boxShadow: "0 0 60px rgba(0,0,0,.6)" } },
-        React.createElement("div", { style: { textAlign: "center", marginBottom: 22 } },
-          React.createElement("div", { style: { fontSize: 17, fontWeight: 700, fontFamily: "Syne", marginBottom: 5 } }, "Aktivér AI System"),
-          React.createElement("div", { style: { fontSize: 13, color: "var(--muted)" } }, "Tryk Start for at prøve demo-versionen")
-        ),
-        React.createElement("button", { onClick: go, disabled: loading, style: { width: "100%", padding: "14px", borderRadius: 10, border: "none", cursor: loading ? "not-allowed" : "pointer", background: loading ? "var(--surface2)" : "linear-gradient(135deg,#00e5ff,#7c3aed)", color: loading ? "var(--muted)" : "#fff", fontSize: 15, fontWeight: 700, fontFamily: "Syne", transition: "all .3s", opacity: loading ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 9, marginTop: 4 } },
-          loading ? React.createElement(React.Fragment, null,
-            React.createElement("div", { style: { width: 16, height: 16, border: "2px solid rgba(255,255,255,.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .8s linear infinite" } }),
-            " Starter" + d
-          ) : React.createElement(React.Fragment, null, React.createElement("span", null, "⚡"), " Start AI System")
-        ),
-        React.createElement("div", { style: { marginTop: 16, padding: "9px 13px", background: "rgba(0,229,255,.04)", border: "1px solid rgba(0,229,255,.1)", borderRadius: 8, fontSize: 11, color: "var(--muted)", textAlign: "center" } }, "🎮 Demo mode: Tryk Start for at prøve alle funktioner")
-      )
-    )
-  );
-}
-
-function App() {
-  const [apiKey, setApiKey] = useState(null);
-  const [page, setPage] = useState(null);
-
-  const getNavLabel = function(id) {
-    for (var i = 0; i < NAV.length; i++) {
-      if (NAV[i].id === id) return NAV[i].label;
-    }
-    return "";
-  };
-
-  const renderPage = function() {
-    if (page === "trending") return React.createElement(TrendingPage, null);
-    if (page === "profit") return React.createElement(ProfitPage, null);
-    if (page === "sellspeed") return React.createElement(SellSpeedPage, null);
-    if (page === "chat") return React.createElement(ChatPage, { apiKey: apiKey });
-    if (page === "market") return React.createElement(MarketPage, null);
-    if (page === "bestbuy") return React.createElement(BestBuyPage, null);
-    if (page === "brands") return React.createElement(BrandsPage, null);
-    if (page === "dashboard") return React.createElement(DashboardPage, null);
-    return null;
-  };
-
+function renderContent() {
   if (!apiKey) {
-    return React.createElement(LandingPage, { onStart: function(k) { setApiKey(k); } });
+    return renderLandingPage();
   }
-
-  return React.createElement("div", { style: { minHeight: "100vh" } },
-    React.createElement("header", { style: { background: "var(--surface)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 52, position: "sticky", top: 0, zIndex: 50 } },
-      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
-        page ? React.createElement("button", { onClick: function() { setPage(null); }, style: { width: 32, height: 32, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", color: "var(--muted)", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" } }, "←") : null,
-        React.createElement("span", { style: { fontFamily: "Syne", fontWeight: 800, fontSize: 18, background: "linear-gradient(90deg,#00e5ff,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } }, "Vinted AI"),
-        page ? React.createElement("span", { style: { fontSize: 12, color: "var(--muted)" } }, "/ " + getNavLabel(page)) : null
-      ),
-      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
-        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.2)", borderRadius: 20 } },
-          React.createElement("div", { style: { width: 6, height: 6, borderRadius: "50%", background: "var(--green)", animation: "pulse 2s ease infinite" } }),
-          React.createElement("span", { style: { fontSize: 10, color: "var(--green)", fontWeight: 600 } }, "AI Online")
-        ),
-        React.createElement("button", { onClick: function() { setApiKey(null); setPage(null); }, style: { padding: "5px 10px", background: "rgba(239,68,68,.07)", border: "1px solid rgba(239,68,68,.15)", borderRadius: 7, color: "var(--red)", fontSize: 11, cursor: "pointer" } }, "Log ud")
-      )
-    ),
-    !page ? React.createElement("div", { style: { minHeight: "calc(100vh - 52px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px" } },
-      React.createElement("div", { style: { width: "100%", maxWidth: 700, margin: "0 auto" } },
-        React.createElement("div", { style: { textAlign: "center", marginBottom: 32, animation: "up .5s ease both" } },
-          React.createElement("div", { style: { fontSize: 34, marginBottom: 8 } }, "👋"),
-          React.createElement("h1", { style: { fontFamily: "Syne", fontSize: 26, fontWeight: 800, marginBottom: 6 } }, "Hvad vil du analysere?"),
-          React.createElement("p", { style: { color: "var(--muted)", fontSize: 14 } }, "Tryk på en knap for at åbne siden")
-        ),
-        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 } }, NAV.map(function(n, i) {
-          const [hover, setHover] = React.useState(false);
-          return React.createElement("button", { key: n.id, onClick: function() { setPage(n.id); }, style: { display: "flex", alignItems: "center", gap: 16, padding: "20px 18px", background: hover ? "#0f1622" : "var(--surface)", border: "1px solid " + (hover ? "rgba(0,229,255,.4)" : "var(--border)"), borderRadius: 18, cursor: "pointer", textAlign: "left", transition: "all .2s", animation: "up .4s ease " + (i * 0.05) + "s both", fontFamily: "inherit", transform: hover ? "translateY(-2px)" : "none", boxShadow: hover ? "0 12px 28px rgba(0,229,255,.07)" : "none" }, onMouseEnter: function() { setHover(true); }, onMouseLeave: function() { setHover(false); } },
-            React.createElement("div", { style: { width: 50, height: 50, borderRadius: 14, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 } }, n.icon),
-            React.createElement("div", { style: { flex: 1 } },
-              React.createElement("div", { style: { fontWeight: 700, fontSize: 16, color: "var(--text)", fontFamily: "Syne", marginBottom: 4 } }, n.label),
-              React.createElement("div", { style: { fontSize: 12, color: "var(--muted)", lineHeight: 1.3 } }, n.desc)
-            ),
-            React.createElement("div", { style: { color: "var(--muted)", fontSize: 20, flexShrink: 0 } }, "→")
-          );
-        }))
-      )
-    ) : React.createElement("div", { style: { maxWidth: 800, margin: "0 auto", padding: "24px 16px 50px" } }, renderPage())
-  );
+  
+  let pageContent = '';
+  if (!currentPage) {
+    pageContent = renderMainMenu();
+  } else {
+    switch(currentPage) {
+      case 'trending': pageContent = renderTrendingPage(); break;
+      case 'profit': pageContent = renderProfitPage(); break;
+      case 'sellspeed': pageContent = renderSellSpeedPage(); break;
+      case 'chat': pageContent = renderChatPage(); break;
+      case 'market': pageContent = renderMarketPage(); break;
+      case 'bestbuy': pageContent = renderBestBuyPage(); break;
+      case 'brands': pageContent = renderBrandsPage(); break;
+      case 'dashboard': pageContent = renderDashboardPage(); break;
+      default: pageContent = renderMainMenu();
+    }
+  }
+  
+  return `
+    ${renderHeader()}
+    <div style="max-width:800px; margin:0 auto; padding:24px 16px 50px;">
+      ${pageContent}
+    </div>
+  `;
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App, null));
+function renderLandingPage() {
+  return `
+    <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,229,255,.05), transparent), var(--bg);">
+      <div style="position:relative; z-index:1; width:100%; max-width:440px; padding:0 20px; animation:up 0.7s ease both;">
+        <div style="text-align:center; margin-bottom:40px;">
+          <div style="font-size:48px; margin-bottom:14px;">🤖</div>
+          <h1 style="font-family:Syne; font-size:38px; font-weight:800; background:linear-gradient(90deg,#00e5ff,#a78bfa,#00e5ff); background-size:200%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation:shimmer 3s linear infinite; margin-bottom:10px;">Vinted AI</h1>
+          <div style="font-size:12px; color:var(--muted); letter-spacing:.12em; text-transform:uppercase;">Professional Resale Intelligence</div>
+        </div>
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:30px; box-shadow:0 0 60px rgba(0,0,0,.6);">
+          <div style="text-align:center; margin-bottom:22px;">
+            <div style="font-size:17px; font-weight:700; font-family:Syne; margin-bottom:5px;">Aktivér AI System</div>
+            <div style="font-size:13px; color:var(--muted);">Tryk Start for at prøve demo-versionen</div>
+          </div>
+          <button onclick="startDemo()" style="width:100%; padding:14px; border-radius:10px; border:none; cursor:pointer; background:linear-gradient(135deg,#00e5ff,#7c3aed); color:#fff; font-size:15px; font-weight:700; font-family:Syne; display:flex; align-items:center; justify-content:center; gap:9px;">
+            <span>⚡</span> Start AI System
+          </button>
+          <div style="margin-top:16px; padding:9px 13px; background:rgba(0,229,255,.04); border:1px solid rgba(0,229,255,.1); border-radius:8px; font-size:11px; color:var(--muted); text-align:center;">🎮 Demo mode: Prøv alle funktioner gratis</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function startDemo() {
+  apiKey = "demo";
+  currentPage = null;
+  renderApp();
+}
+
+function logout() {
+  apiKey = null;
+  currentPage = null;
+  renderApp();
+}
+
+function navigateTo(pageId) {
+  currentPage = pageId;
+  renderApp();
+}
+
+function goBack() {
+  currentPage = null;
+  renderApp();
+}
+
+function renderApp() {
+  const appDiv = document.getElementById('app');
+  if (appDiv) {
+    appDiv.innerHTML = renderContent();
+  }
+}
+
+window.navigateTo = navigateTo;
+window.goBack = goBack;
+window.logout = logout;
+window.startDemo = startDemo;
+window.sendChatMessage = sendChatMessage;
+
+renderApp();
 </script>
 </body>
 </html>
