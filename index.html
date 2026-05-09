@@ -7,7 +7,6 @@
     <style>
         * { -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; box-sizing: border-box; }
         body { margin: 0; padding: 0; overflow-x: hidden; background: #07090f; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
         
         :root {
             --bg: #07090f; --surface: #0e1119; --surface2: #141820;
@@ -46,8 +45,6 @@ const NAV = [
   { id: "dashboard", icon: "📊", label: "Dashboard", desc: "Komplet overblik over markedet" },
 ];
 
-const SYSTEM_PROMPT = "You are Vinted AI — an elite resale market analyst. You specialize in trending products on Vinted, Depop, eBay, StockX. Focus on European markets (Denmark, Sweden, Germany, UK). Always respond in clean structured format with emojis. Be concise and professional. Use sections: 🔥 TOP PRODUCTS / 💰 PROFIT: High/Medium/Low / ⚡ SELL SPEED: Fast/Medium/Slow / 📌 TIPS Answer in the same language the user writes in.";
-
 function Badge({ children, color }) {
   const colorMap = { 
     green: ["rgba(16,185,129,.12)","rgba(16,185,129,.35)","#10b981"], 
@@ -64,8 +61,8 @@ function Card({ children, style = {}, delay = 0 }) {
   const [hover, setHover] = React.useState(false);
   return React.createElement("div", { 
     style: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: 20, animation: "up .45s ease " + delay + "s both", transition: "transform .2s, box-shadow .2s", ...style, transform: hover ? "translateY(-2px)" : "none", boxShadow: hover ? "0 8px 32px rgba(0,229,255,.07)" : "none" },
-    onMouseEnter: () => setHover(true),
-    onMouseLeave: () => setHover(false)
+    onMouseEnter: function() { setHover(true); },
+    onMouseLeave: function() { setHover(false); }
   }, children);
 }
 
@@ -75,8 +72,8 @@ function Row({ rank, name, brand, profit, speed, category, delay = 0 }) {
   const [hover, setHover] = React.useState(false);
   return React.createElement("div", { 
     style: { display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", background: hover ? "#181f2e" : "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: "up .4s ease " + delay + "s both", transition: "background .2s" },
-    onMouseEnter: () => setHover(true),
-    onMouseLeave: () => setHover(false)
+    onMouseEnter: function() { setHover(true); },
+    onMouseLeave: function() { setHover(false); }
   }, 
     React.createElement("div", { style: { width: 26, height: 26, borderRadius: 7, background: "rgba(0,229,255,.07)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "var(--accent)", flexShrink: 0 } }, rank),
     React.createElement("div", { style: { flex: 1, minWidth: 0 } }, 
@@ -167,6 +164,31 @@ function ProfitPage() {
   );
 }
 
+function SellSpeedPage() {
+  const items = [
+    { name: "Adidas Samba OG", speed: "Fast", days: "1-2 dage", c: "green" },
+    { name: "Jordan 1 Retro High", speed: "Fast", days: "1-3 dage", c: "green" },
+    { name: "Nike Tech Fleece", speed: "Fast", days: "2-4 dage", c: "green" },
+    { name: "Levi's 501 Vintage", speed: "Fast", days: "1-3 dage", c: "green" },
+    { name: "Stüssy Hoodie", speed: "Fast", days: "2-5 dage", c: "green" },
+    { name: "New Balance 550", speed: "Medium", days: "5-10 dage", c: "amber" },
+    { name: "Carhartt WIP Jakke", speed: "Medium", days: "4-8 dage", c: "amber" },
+    { name: "Arc'teryx Jakke", speed: "Medium", days: "7-14 dage", c: "amber" },
+  ];
+  const glowColor = { green: "var(--green)", amber: "var(--amber)", red: "var(--red)" };
+  return React.createElement("div", null,
+    React.createElement(PageTitle, { icon: "⚡", title: "Sell Speed", sub: "Estimeret salgshastighed for populære produkter" }),
+    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, items.map(function(it, i) {
+      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: "up .4s ease " + (i * 0.04) + "s both" } },
+        React.createElement("div", { style: { width: 9, height: 9, borderRadius: "50%", background: glowColor[it.c], boxShadow: "0 0 7px " + glowColor[it.c], flexShrink: 0 } }),
+        React.createElement("div", { style: { flex: 1, fontWeight: 600, fontSize: 14 } }, it.name),
+        React.createElement("div", { style: { fontSize: 12, color: "var(--muted)" } }, it.days),
+        React.createElement(Badge, { color: it.c }, it.speed)
+      );
+    }))
+  );
+}
+
 function ChatPage({ apiKey }) {
   const [messages, setMessages] = useState([{ role: "assistant", content: "👋 Hej! Jeg er Vinted AI.\n\nSpørg mig om:\n• 🔥 Hvad sælger bedst?\n• 💰 Mest profitable produkter?\n• ⚡ Hvad sælger hurtigst?\n• 🏆 Hvilke brands er trending?" }]);
   const [input, setInput] = useState("");
@@ -182,7 +204,7 @@ function ChatPage({ apiKey }) {
     const q = (text || input).trim();
     if (!q || loading) return;
     setInput("");
-    const history = messages.concat([{ role: "user", content: q }]).map(function(m) { return { role: m.role, content: m.content }; });
+    const history = messages.concat([{ role: "user", content: q }]);
     setMessages(history);
     setLoading(true);
     
@@ -226,6 +248,96 @@ function ChatPage({ apiKey }) {
   );
 }
 
+function MarketPage() {
+  const trends = [
+    { cat: "Vintage Denim", change: "+41%", up: true, brands: "Levi's, Lee, Wrangler" },
+    { cat: "Sneakers", change: "+34%", up: true, brands: "Nike, Adidas, NB" },
+    { cat: "Streetwear", change: "+28%", up: true, brands: "Stüssy, Carhartt, Supreme" },
+    { cat: "Outdoor/Technical", change: "+22%", up: true, brands: "Arc'teryx, TNF, Patagonia" },
+  ];
+  return React.createElement("div", null,
+    React.createElement(PageTitle, { icon: "📈", title: "Market Trends", sub: "Aktuelle markedsbevægelser og kategori vækst" }),
+    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, trends.map(function(t, i) {
+      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: "up .4s ease " + (i * 0.05) + "s both" } },
+        React.createElement("span", { style: { fontSize: 20 } }, t.up ? "📈" : "📉"),
+        React.createElement("div", { style: { flex: 1 } },
+          React.createElement("div", { style: { fontWeight: 600, fontSize: 14 } }, t.cat),
+          React.createElement("div", { style: { fontSize: 12, color: "var(--muted)", marginTop: 2 } }, t.brands)
+        ),
+        React.createElement("div", { style: { fontWeight: 700, fontSize: 16, color: t.up ? "var(--green)" : "var(--red)" } }, t.change)
+      );
+    }))
+  );
+}
+
+function BestBuyPage() {
+  const items = [
+    { name: "Levi's 501 Jeans (W30 L32)", buy: "50-100 kr", sell: "200-400 kr", where: "Loppemarkeder, Genbrugsbutikker", risk: "Low" },
+    { name: "Nike Air Max 90 (str. 42-44)", buy: "200-400 kr", sell: "600-900 kr", where: "Facebook Marketplace, Vinted", risk: "Low" },
+    { name: "Adidas Samba (hvid)", buy: "350-500 kr", sell: "700-1000 kr", where: "Vinted, Lokal salg", risk: "Low" },
+    { name: "Carhartt WIP Jakke (S/M)", buy: "300-500 kr", sell: "700-1100 kr", where: "Vinted, Depop", risk: "Medium" },
+  ];
+  return React.createElement("div", null,
+    React.createElement(PageTitle, { icon: "🛒", title: "Best Products To Buy", sub: "Anbefalede produkter at købe og sælge videre" }),
+    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, items.map(function(it, i) {
+      return React.createElement(Card, { key: i, delay: i * 0.05 },
+        React.createElement("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" } },
+          React.createElement("div", { style: { flex: 1, minWidth: 160 } },
+            React.createElement("div", { style: { fontWeight: 700, fontSize: 15, marginBottom: 6 } }, it.name),
+            React.createElement("div", { style: { display: "flex", gap: 14, flexWrap: "wrap" } },
+              React.createElement("div", { style: { fontSize: 12 } }, React.createElement("span", { style: { color: "var(--muted)" } }, "Køb: "), React.createElement("span", { style: { color: "var(--red)", fontWeight: 600 } }, it.buy)),
+              React.createElement("div", { style: { fontSize: 12 } }, React.createElement("span", { style: { color: "var(--muted)" } }, "Sælg: "), React.createElement("span", { style: { color: "var(--green)", fontWeight: 600 } }, it.sell))
+            ),
+            React.createElement("div", { style: { fontSize: 11, color: "var(--muted)", marginTop: 6 } }, "📍 " + it.where)
+          ),
+          React.createElement(Badge, { color: it.risk === "Low" ? "green" : "amber" }, "Risk: " + it.risk)
+        )
+      );
+    }))
+  );
+}
+
+function BrandsPage() {
+  const brands = [
+    { name: "Levi's", score: 98, cat: "Denim", note: "Vintage 501 er guld. Altid efterspurgt.", tier: "S" },
+    { name: "Nike", score: 96, cat: "Sneakers", note: "Tech Fleece og retro sneakers sælger lynhurtigt.", tier: "S" },
+    { name: "Adidas", score: 94, cat: "Sneakers", note: "Samba og Gazelle er HOT. Høj flip-value.", tier: "S" },
+    { name: "Arc'teryx", score: 93, cat: "Technical", note: "Premium brand — høj pris, høj profit.", tier: "S" },
+  ];
+  const tc = { S: ["rgba(245,158,11,.1)","rgba(245,158,11,.35)","#f59e0b"], A: ["rgba(0,229,255,.1)","rgba(0,229,255,.3)","#00e5ff"], B: ["rgba(124,58,237,.1)","rgba(124,58,237,.3)","#a78bfa"] };
+  return React.createElement("div", null,
+    React.createElement(PageTitle, { icon: "🏆", title: "Best Brands", sub: "Top brands til resale — rangeret efter profit potentiale" }),
+    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, brands.map(function(b, i) {
+      const t = tc[b.tier];
+      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: "up .4s ease " + (i * 0.04) + "s both", flexWrap: "wrap" } },
+        React.createElement("div", { style: { width: 34, height: 34, borderRadius: 9, background: t[0], border: "1px solid " + t[1], display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: t[2], fontSize: 14, flexShrink: 0 } }, b.tier),
+        React.createElement("div", { style: { flex: 1, minWidth: 100 } },
+          React.createElement("div", { style: { fontWeight: 700, fontSize: 14 } }, b.name),
+          React.createElement("div", { style: { fontSize: 11, color: "var(--muted)", marginTop: 3 } }, b.note)
+        ),
+        React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } },
+          React.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: "var(--accent)" } }, b.score + "/100"),
+          React.createElement("div", { style: { fontSize: 11, color: "var(--muted)" } }, b.cat)
+        )
+      );
+    }))
+  );
+}
+
+function DashboardPage() {
+  const top = [
+    { name: "Levi's 501 Vintage", brand: "Levi's", profit: "High", speed: "Fast", category: "Denim" },
+    { name: "Adidas Samba OG", brand: "Adidas", profit: "High", speed: "Fast", category: "Sneakers" },
+    { name: "Nike Tech Fleece", brand: "Nike", profit: "High", speed: "Fast", category: "Sportswear" },
+  ];
+  return React.createElement("div", null,
+    React.createElement(PageTitle, { icon: "📊", title: "Dashboard", sub: "Komplet overblik over Vinted markedet" }),
+    React.createElement(StatRow, { stats: [{ icon: "🔥", label: "Trending Items", value: "847", color: "cyan" }, { icon: "💰", label: "Avg Profit", value: "94%", color: "green" }, { icon: "⚡", label: "Fast Sellers", value: "62%", color: "amber" }, { icon: "📈", label: "Vækst uge", value: "+23%", color: "green" }] }),
+    React.createElement("div", { style: { fontSize: 12, fontWeight: 600, color: "var(--muted)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 } }, "🏆 Top 3 Lige Nu"),
+    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9, marginBottom: 28 } }, top.map(function(p, i) { return React.createElement(Row, { key: i, rank: i + 1, name: p.name, brand: p.brand, profit: p.profit, speed: p.speed, category: p.category, delay: i * 0.05 }); }))
+  );
+}
+
 function LandingPage({ onStart }) {
   const [key, setKey] = useState("");
   const [loading, setLoading] = useState(false);
@@ -239,19 +351,16 @@ function LandingPage({ onStart }) {
   }, [loading]);
 
   const go = function() {
-    if (!key.trim()) { setError("Indtast din API nøgle."); return; }
-    if (key.trim().length < 10) { setError("Nøglen ser for kort ud."); return; }
     setLoading(true);
     setError("");
     setTimeout(function() {
       setLoading(false);
-      onStart(key.trim());
+      onStart("demo");
     }, 1600);
   };
 
   return React.createElement("div", { style: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden", background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,229,255,.05), transparent), var(--bg)" } },
     React.createElement("div", { style: { position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(28,35,51,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(28,35,51,.5) 1px, transparent 1px)", backgroundSize: "56px 56px", pointerEvents: "none" } }),
-    React.createElement("div", { style: { position: "absolute", left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent, rgba(0,229,255,.4), transparent)", animation: "scan 5s linear infinite", pointerEvents: "none" } }),
     React.createElement("div", { style: { position: "relative", zIndex: 1, width: "100%", maxWidth: 440, padding: "0 20px", animation: "up .7s ease both" } },
       React.createElement("div", { style: { textAlign: "center", marginBottom: 40 } },
         React.createElement("div", { style: { fontSize: 48, marginBottom: 14 } }, "🤖"),
@@ -261,18 +370,15 @@ function LandingPage({ onStart }) {
       React.createElement("div", { style: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: 30, boxShadow: "0 0 60px rgba(0,0,0,.6)" } },
         React.createElement("div", { style: { textAlign: "center", marginBottom: 22 } },
           React.createElement("div", { style: { fontSize: 17, fontWeight: 700, fontFamily: "Syne", marginBottom: 5 } }, "Aktivér AI System"),
-          React.createElement("div", { style: { fontSize: 13, color: "var(--muted)" } }, "Indtast din API nøgle (demo: tryk blot Start)")
+          React.createElement("div", { style: { fontSize: 13, color: "var(--muted)" } }, "Tryk Start for at prøve demo-versionen")
         ),
-        React.createElement("label", { style: { display: "block", fontSize: 11, fontWeight: 600, color: "var(--muted)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 7 } }, "API Nøgle"),
-        React.createElement("input", { type: "password", value: key, onChange: function(e) { setKey(e.target.value); setError(""); }, onKeyDown: function(e) { if (e.key === "Enter") go(); }, placeholder: "gsk-... eller sk-ant-... (eller tryk Start)", style: { width: "100%", padding: "12px 14px", background: "var(--surface2)", border: "1px solid " + (error ? "var(--red)" : "var(--border)"), borderRadius: 10, color: "var(--text)", fontSize: 14, outline: "none", fontFamily: "inherit", marginBottom: 6 } }),
-        error ? React.createElement("div", { style: { fontSize: 12, color: "var(--red)", marginBottom: 10 } }, error) : null,
         React.createElement("button", { onClick: go, disabled: loading, style: { width: "100%", padding: "14px", borderRadius: 10, border: "none", cursor: loading ? "not-allowed" : "pointer", background: loading ? "var(--surface2)" : "linear-gradient(135deg,#00e5ff,#7c3aed)", color: loading ? "var(--muted)" : "#fff", fontSize: 15, fontWeight: 700, fontFamily: "Syne", transition: "all .3s", opacity: loading ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 9, marginTop: 4 } },
           loading ? React.createElement(React.Fragment, null,
             React.createElement("div", { style: { width: 16, height: 16, border: "2px solid rgba(255,255,255,.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .8s linear infinite" } }),
             " Starter" + d
           ) : React.createElement(React.Fragment, null, React.createElement("span", null, "⚡"), " Start AI System")
         ),
-        React.createElement("div", { style: { marginTop: 16, padding: "9px 13px", background: "rgba(0,229,255,.04)", border: "1px solid rgba(0,229,255,.1)", borderRadius: 8, fontSize: 11, color: "var(--muted)", textAlign: "center" } }, "🔒 Demo mode: Tryk bare Start for at prøve (AI svarer med mock data)")
+        React.createElement("div", { style: { marginTop: 16, padding: "9px 13px", background: "rgba(0,229,255,.04)", border: "1px solid rgba(0,229,255,.1)", borderRadius: 8, fontSize: 11, color: "var(--muted)", textAlign: "center" } }, "🎮 Demo mode: Tryk Start for at prøve alle funktioner")
       )
     )
   );
@@ -282,128 +388,64 @@ function App() {
   const [apiKey, setApiKey] = useState(null);
   const [page, setPage] = useState(null);
 
-  const renderPage = function() {
-    switch (page) {
-      case "trending": return React.createElement(TrendingPage, null);
-      case "profit": return React.createElement(ProfitPage, null);
-      case "sellspeed": return React.createElement(SellSpeedPage, null);
-      case "chat": return React.createElement(ChatPage, { apiKey: apiKey });
-      case "market": return React.createElement(MarketPage, null);
-      case "bestbuy": return React.createElement(BestBuyPage, null);
-      case "brands": return React.createElement(BrandsPage, null);
-      case "dashboard": return React.createElement(DashboardPage, null);
-      default: return null;
+  const getNavLabel = function(id) {
+    for (var i = 0; i < NAV.length; i++) {
+      if (NAV[i].id === id) return NAV[i].label;
     }
+    return "";
   };
 
-  return React.createElement(React.Fragment, null,
-    React.createElement("style", null, `
-      @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
-      * { box-sizing: border-box; }
-      body { background: #07090f; margin: 0; font-family: 'DM Sans', sans-serif; }
-    `),
-    !apiKey ? React.createElement(LandingPage, { onStart: function(k) { setApiKey(k || "demo"); } })
-      : React.createElement("div", { style: { minHeight: "100vh" } },
-        React.createElement("header", { style: { background: "var(--surface)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 52, position: "sticky", top: 0, zIndex: 50 } },
-          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
-            page ? React.createElement("button", { onClick: function() { setPage(null); }, style: { width: 32, height: 32, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", color: "var(--muted)", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" } }, "←") : null,
-            React.createElement("span", { style: { fontFamily: "Syne", fontWeight: 800, fontSize: 18, background: "linear-gradient(90deg,#00e5ff,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } }, "Vinted AI"),
-            page ? React.createElement("span", { style: { fontSize: 12, color: "var(--muted)" } }, "/ " + (NAV.find(function(n) { return n.id === page; })?.label || "")) : null
-          ),
-          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
-            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.2)", borderRadius: 20 } },
-              React.createElement("div", { style: { width: 6, height: 6, borderRadius: "50%", background: "var(--green)", animation: "pulse 2s ease infinite" } }),
-              React.createElement("span", { style: { fontSize: 10, color: "var(--green)", fontWeight: 600 } }, "AI Online")
-            ),
-            React.createElement("button", { onClick: function() { setApiKey(null); setPage(null); }, style: { padding: "5px 10px", background: "rgba(239,68,68,.07)", border: "1px solid rgba(239,68,68,.15)", borderRadius: 7, color: "var(--red)", fontSize: 11, cursor: "pointer" } }, "Log ud")
-          )
+  const renderPage = function() {
+    if (page === "trending") return React.createElement(TrendingPage, null);
+    if (page === "profit") return React.createElement(ProfitPage, null);
+    if (page === "sellspeed") return React.createElement(SellSpeedPage, null);
+    if (page === "chat") return React.createElement(ChatPage, { apiKey: apiKey });
+    if (page === "market") return React.createElement(MarketPage, null);
+    if (page === "bestbuy") return React.createElement(BestBuyPage, null);
+    if (page === "brands") return React.createElement(BrandsPage, null);
+    if (page === "dashboard") return React.createElement(DashboardPage, null);
+    return null;
+  };
+
+  if (!apiKey) {
+    return React.createElement(LandingPage, { onStart: function(k) { setApiKey(k); } });
+  }
+
+  return React.createElement("div", { style: { minHeight: "100vh" } },
+    React.createElement("header", { style: { background: "var(--surface)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 52, position: "sticky", top: 0, zIndex: 50 } },
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+        page ? React.createElement("button", { onClick: function() { setPage(null); }, style: { width: 32, height: 32, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", color: "var(--muted)", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" } }, "←") : null,
+        React.createElement("span", { style: { fontFamily: "Syne", fontWeight: 800, fontSize: 18, background: "linear-gradient(90deg,#00e5ff,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } }, "Vinted AI"),
+        page ? React.createElement("span", { style: { fontSize: 12, color: "var(--muted)" } }, "/ " + getNavLabel(page)) : null
+      ),
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.2)", borderRadius: 20 } },
+          React.createElement("div", { style: { width: 6, height: 6, borderRadius: "50%", background: "var(--green)", animation: "pulse 2s ease infinite" } }),
+          React.createElement("span", { style: { fontSize: 10, color: "var(--green)", fontWeight: 600 } }, "AI Online")
         ),
-        !page ? React.createElement("div", { style: { minHeight: "calc(100vh - 52px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px" } },
-          React.createElement("div", { style: { width: "100%", maxWidth: 700, margin: "0 auto" } },
-            React.createElement("div", { style: { textAlign: "center", marginBottom: 32, animation: "up .5s ease both" } },
-              React.createElement("div", { style: { fontSize: 34, marginBottom: 8 } }, "👋"),
-              React.createElement("h1", { style: { fontFamily: "Syne", fontSize: 26, fontWeight: 800, marginBottom: 6 } }, "Hvad vil du analysere?"),
-              React.createElement("p", { style: { color: "var(--muted)", fontSize: 14 } }, "Tryk på en knap for at åbne siden")
-            ),
-            React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 16 } }, NAV.map(function(n, i) {
-              const [hover, setHover] = React.useState(false);
-              return React.createElement("button", { key: n.id, onClick: function() { setPage(n.id); }, style: { display: "flex", alignItems: "center", gap: 16, padding: "20px 18px", background: hover ? "#0f1622" : "var(--surface)", border: "1px solid " + (hover ? "rgba(0,229,255,.4)" : "var(--border)"), borderRadius: 18, cursor: "pointer", textAlign: "left", transition: "all .2s", animation: "up .4s ease " + (i * 0.05) + "s both", fontFamily: "inherit", transform: hover ? "translateY(-2px)" : "none", boxShadow: hover ? "0 12px 28px rgba(0,229,255,.07)" : "none" }, onMouseEnter: function() { setHover(true); }, onMouseLeave: function() { setHover(false); } },
-                React.createElement("div", { style: { width: 50, height: 50, borderRadius: 14, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 } }, n.icon),
-                React.createElement("div", { style: { flex: 1 } },
-                  React.createElement("div", { style: { fontWeight: 700, fontSize: 16, color: "var(--text)", fontFamily: "Syne", marginBottom: 4 } }, n.label),
-                  React.createElement("div", { style: { fontSize: 12, color: "var(--muted)", lineHeight: 1.3 } }, n.desc)
-                ),
-                React.createElement("div", { style: { color: "var(--muted)", fontSize: 20, flexShrink: 0 } }, "→")
-              );
-            }))
-          )
-        ) : React.createElement("div", { style: { maxWidth: 800, margin: "0 auto", padding: "24px 16px 50px" } }, renderPage())
+        React.createElement("button", { onClick: function() { setApiKey(null); setPage(null); }, style: { padding: "5px 10px", background: "rgba(239,68,68,.07)", border: "1px solid rgba(239,68,68,.15)", borderRadius: 7, color: "var(--red)", fontSize: 11, cursor: "pointer" } }, "Log ud")
       )
-  );
-}
-
-// Missing components that were referenced
-function SellSpeedPage() {
-  const items = [
-    { name: "Adidas Samba OG", speed: "Fast", days: "1-2 dage", c: "green" },
-    { name: "Jordan 1 Retro High", speed: "Fast", days: "1-3 dage", c: "green" },
-    { name: "Nike Tech Fleece", speed: "Fast", days: "2-4 dage", c: "green" },
-    { name: "Levi's 501 Vintage", speed: "Fast", days: "1-3 dage", c: "green" },
-  ];
-  const glowColor = { green: "var(--green)", amber: "var(--amber)", red: "var(--red)" };
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "⚡", title: "Sell Speed", sub: "Estimeret salgshastighed" }),
-    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, items.map(function(it, i) {
-      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)" } },
-        React.createElement("div", { style: { width: 9, height: 9, borderRadius: "50%", background: glowColor[it.c], boxShadow: "0 0 7px " + glowColor[it.c], flexShrink: 0 } }),
-        React.createElement("div", { style: { flex: 1, fontWeight: 600, fontSize: 14 } }, it.name),
-        React.createElement("div", { style: { fontSize: 12, color: "var(--muted)" } }, it.days),
-        React.createElement(Badge, { color: it.c }, it.speed)
-      );
-    }))
-  );
-}
-
-function MarketPage() {
-  const trends = [
-    { cat: "Vintage Denim", change: "+41%", up: true, brands: "Levi's, Lee" },
-    { cat: "Sneakers", change: "+34%", up: true, brands: "Nike, Adidas" },
-  ];
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "📈", title: "Market Trends", sub: "Markedsbevægelser" }),
-    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 9 } }, trends.map(function(t, i) {
-      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "var(--surface2)", borderRadius: 11 } },
-        React.createElement("span", { style: { fontSize: 20 } }, t.up ? "📈" : "📉"),
-        React.createElement("div", { style: { flex: 1 } },
-          React.createElement("div", { style: { fontWeight: 600, fontSize: 14 } }, t.cat),
-          React.createElement("div", { style: { fontSize: 12, color: "var(--muted)" } }, t.brands)
+    ),
+    !page ? React.createElement("div", { style: { minHeight: "calc(100vh - 52px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px" } },
+      React.createElement("div", { style: { width: "100%", maxWidth: 700, margin: "0 auto" } },
+        React.createElement("div", { style: { textAlign: "center", marginBottom: 32, animation: "up .5s ease both" } },
+          React.createElement("div", { style: { fontSize: 34, marginBottom: 8 } }, "👋"),
+          React.createElement("h1", { style: { fontFamily: "Syne", fontSize: 26, fontWeight: 800, marginBottom: 6 } }, "Hvad vil du analysere?"),
+          React.createElement("p", { style: { color: "var(--muted)", fontSize: 14 } }, "Tryk på en knap for at åbne siden")
         ),
-        React.createElement("div", { style: { fontWeight: 700, fontSize: 16, color: t.up ? "var(--green)" : "var(--red)" } }, t.change)
-      );
-    }))
-  );
-}
-
-function BestBuyPage() {
-  const items = [{ name: "Levi's 501 Jeans", buy: "50-100 kr", sell: "200-400 kr", where: "Loppemarkeder", risk: "Low" }];
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "🛒", title: "Best Products To Buy", sub: "Anbefalede køb" }),
-    items.map(function(it, i) { return React.createElement(Card, { key: i }, it.name + " - " + it.buy + " → " + it.sell); })
-  );
-}
-
-function BrandsPage() {
-  const brands = [{ name: "Levi's", score: 98, tier: "S" }];
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "🏆", title: "Best Brands", sub: "Top brands" }),
-    React.createElement("div", null, brands.map(function(b, i) { return React.createElement("div", { key: i }, b.name + " - " + b.score + "/100"); }))
-  );
-}
-
-function DashboardPage() {
-  return React.createElement("div", null,
-    React.createElement(PageTitle, { icon: "📊", title: "Dashboard", sub: "Komplet overblik" }),
-    React.createElement(StatRow, { stats: [{ icon: "🔥", label: "Trending", value: "847", color: "cyan" }] })
+        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 } }, NAV.map(function(n, i) {
+          const [hover, setHover] = React.useState(false);
+          return React.createElement("button", { key: n.id, onClick: function() { setPage(n.id); }, style: { display: "flex", alignItems: "center", gap: 16, padding: "20px 18px", background: hover ? "#0f1622" : "var(--surface)", border: "1px solid " + (hover ? "rgba(0,229,255,.4)" : "var(--border)"), borderRadius: 18, cursor: "pointer", textAlign: "left", transition: "all .2s", animation: "up .4s ease " + (i * 0.05) + "s both", fontFamily: "inherit", transform: hover ? "translateY(-2px)" : "none", boxShadow: hover ? "0 12px 28px rgba(0,229,255,.07)" : "none" }, onMouseEnter: function() { setHover(true); }, onMouseLeave: function() { setHover(false); } },
+            React.createElement("div", { style: { width: 50, height: 50, borderRadius: 14, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 } }, n.icon),
+            React.createElement("div", { style: { flex: 1 } },
+              React.createElement("div", { style: { fontWeight: 700, fontSize: 16, color: "var(--text)", fontFamily: "Syne", marginBottom: 4 } }, n.label),
+              React.createElement("div", { style: { fontSize: 12, color: "var(--muted)", lineHeight: 1.3 } }, n.desc)
+            ),
+            React.createElement("div", { style: { color: "var(--muted)", fontSize: 20, flexShrink: 0 } }, "→")
+          );
+        }))
+      )
+    ) : React.createElement("div", { style: { maxWidth: 800, margin: "0 auto", padding: "24px 16px 50px" } }, renderPage())
   );
 }
 
