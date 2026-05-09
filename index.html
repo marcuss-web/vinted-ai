@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Vinted AI · Resale Intelligence</title>
+    <style>
+        /* additional critical reset for mobile */
+        * { -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; overflow-x: hidden; }
+        button, input, textarea { font-family: inherit; }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/babel-standalone@6.26.0/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const NAV = [
+  { id: "trending", icon: "🔥", label: "Trending Products", desc: "Se hvad der sælger mest lige nu" },
+  { id: "profit", icon: "💰", label: "Profit Analysis", desc: "Find de mest profitable produkter" },
+  { id: "sellspeed", icon: "⚡", label: "Sell Speed", desc: "Hvor hurtigt sælger produkterne?" },
+  { id: "chat", icon: "🤖", label: "AI Chat", desc: "Spørg AI om resale og trends" },
+  { id: "market", icon: "📈", label: "Market Trends", desc: "Aktuelle markedsbevægelser" },
+  { id: "bestbuy", icon: "🛒", label: "Best Products To Buy", desc: "Bedste produkter at købe og flippe" },
+  { id: "brands", icon: "🏆", label: "Best Brands", desc: "Top brands til resale" },
+  { id: "dashboard", icon: "📊", label: "Dashboard", desc: "Komplet overblik over markedet" },
+];
+
+const SYSTEM_PROMPT = `You are Vinted AI — an elite resale market analyst. You specialize in trending products on Vinted, Depop, eBay, StockX. Focus on European markets (Denmark, Sweden, Germany, UK).
+Always respond in clean structured format with emojis. Be concise and professional.
+Use sections: 🔥 TOP PRODUCTS / 💰 PROFIT: High/Medium/Low / ⚡ SELL SPEED: Fast/Medium/Slow / 📌 TIPS
+Answer in the same language the user writes in.`;
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #07090f; --surface: #0e1119; --surface2: #141820;
+    --border: #1c2333; --accent: #00e5ff; --purple: #7c3aed;
+    --text: #e2e8f4; --muted: #4b5a72; --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  @keyframes up { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+  @keyframes scan { 0%{top:-2px;opacity:.5} 100%{top:100%;opacity:0} }
+`;
+
+function Badge({ children, color }) {
+  const c = { green: ["rgba(16,185,129,.12)","rgba(16,185,129,.35)","#10b981"], amber: ["rgba(245,158,11,.12)","rgba(245,158,11,.35)","#f59e0b"], red: ["rgba(239,68,68,.12)","rgba(239,68,68,.35)","#ef4444"], cyan: ["rgba(0,229,255,.12)","rgba(0,229,255,.35)","#00e5ff"], purple: ["rgba(124,58,237,.12)","rgba(124,58,237,.35)","#a78bfa"] }[color] || ["rgba(0,229,255,.12)","rgba(0,229,255,.35)","#00e5ff"];
+  return <span style={{ padding: "3px 9px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: c[0], border: `1px solid ${c[1]}`, color: c[2], letterSpacing: ".04em", textTransform: "uppercase" }}>{children}</span>;
+}
+
+function Card({ children, style = {}, delay = 0 }) {
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: 20, animation: `up .45s ease ${delay}s both`, transition: "transform .2s, box-shadow .2s", ...style }}
+      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,229,255,.07)"; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+      {children}
+    </div>
+  );
+}
+
+function Row({ rank, name, brand, profit, speed, category, delay = 0 }) {
+  const sc = { Fast: "green", Medium: "amber", Slow: "red" }[speed];
+  const pc = { High: "green", Medium: "amber", Low: "red" }[profit];
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: `up .4s ease ${delay}s both`, transition: "background .2s" }}
+      onMouseEnter={e => e.currentTarget.style.background = "#181f2e"}
+      onMouseLeave={e => e.currentTarget.style.background = "var(--surface2)"}>
+      <div style={{ width: 26, height: 26, borderRadius: 7, background: "rgba(0,229,255,.07)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "var(--accent)", flexShrink: 0 }}>{rank}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 600, fontSize: 14 }}>{name}</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{brand} · {category}</div>
+      </div>
+      <div style={{ display: "flex", gap: 7, flexShrink: 0 }}><Badge color={pc}>{profit}</Badge><Badge color={sc}>{speed}</Badge></div>
+    </div>
+  );
+}
+
+function PageTitle({ icon, title, sub }) {
+  return (
+    <div style={{ marginBottom: 28, animation: "up .4s ease both" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <span style={{ fontSize: 24 }}>{icon}</span>
+        <h1 style={{ fontFamily: "Syne", fontSize: 24, fontWeight: 800 }}>{title}</h1>
+      </div>
+      <div style={{ fontSize: 13, color: "var(--muted)", paddingLeft: 34 }}>{sub}</div>
+      <div style={{ height: 1, marginTop: 16, background: "linear-gradient(90deg, rgba(0,229,255,.35), transparent)" }} />
+    </div>
+  );
+}
+
+function StatRow({ stats }) {
+  const colorMap = { cyan: "var(--accent)", green: "var(--green)", amber: "var(--amber)", red: "var(--red)", purple: "#a78bfa" };
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${stats.length}, 1fr)`, gap: 12, marginBottom: 28 }}>
+      {stats.map((s, i) => (
+        <Card key={i} delay={i * .05} style={{ textAlign: "center", padding: 16 }}>
+          <div style={{ fontSize: 22, marginBottom: 6 }}>{s.icon}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "Syne", color: colorMap[s.color] || "var(--text)" }}>{s.value}</div>
+          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 3 }}>{s.label}</div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function TrendingPage() {
+  const products = [
+    { name: "Nike Tech Fleece Jogger", brand: "Nike", profit: "High", speed: "Fast", category: "Sportswear" },
+    { name: "Adidas Samba OG", brand: "Adidas", profit: "High", speed: "Fast", category: "Sneakers" },
+    { name: "Vintage Levi's 501", brand: "Levi's", profit: "High", speed: "Fast", category: "Denim" },
+    { name: "New Balance 550", brand: "New Balance", profit: "High", speed: "Fast", category: "Sneakers" },
+    { name: "Carhartt WIP Jacket", brand: "Carhartt", profit: "Medium", speed: "Fast", category: "Outerwear" },
+    { name: "Stüssy Hoodie", brand: "Stüssy", profit: "High", speed: "Fast", category: "Streetwear" },
+    { name: "Ralph Lauren Polo (Vintage)", brand: "Ralph Lauren", profit: "Medium", speed: "Medium", category: "Classics" },
+    { name: "Jordan 1 Retro High", brand: "Jordan", profit: "High", speed: "Fast", category: "Sneakers" },
+    { name: "The North Face Nuptse", brand: "TNF", profit: "High", speed: "Medium", category: "Outerwear" },
+    { name: "Arc'teryx Beta Jacket", brand: "Arc'teryx", profit: "High", speed: "Medium", category: "Outerwear" },
+  ];
+  return (
+    <div>
+      <PageTitle icon="🔥" title="Trending Products" sub="De mest efterspurgte produkter på Vinted lige nu" />
+      <StatRow stats={[{ icon: "📦", label: "Trending Items", value: "847", color: "cyan" }, { icon: "⬆️", label: "Vækst uge", value: "+23%", color: "green" }, { icon: "🔥", label: "Hot Kategori", value: "Sneakers", color: "amber" }, { icon: "⚡", label: "Avg Salgstid", value: "2 dage", color: "cyan" }]} />
+      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>Top 10 Trending Nu</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {products.map((p, i) => <Row key={i} rank={i + 1} {...p} delay={i * .04} />)}
+      </div>
+    </div>
+  );
+}
+
+function ProfitPage() {
+  const items = [
+    { name: "Levi's 501 Vintage", buy: "50-100", sell: "200-400", profit: "High", margin: "+212%" },
+    { name: "Jordan 1 Retro High OG", buy: "800", sell: "1800", profit: "High", margin: "+125%" },
+    { name: "Adidas Samba OG White", buy: "400", sell: "850", profit: "High", margin: "+112%" },
+    { name: "Nike Tech Fleece Set", buy: "300", sell: "600", profit: "High", margin: "+100%" },
+    { name: "Stüssy 8-Ball Fleece", buy: "500", sell: "900", profit: "High", margin: "+80%" },
+    { name: "Arc'teryx Beta AR", buy: "1500", sell: "2500", profit: "High", margin: "+67%" },
+    { name: "Ralph Lauren Polo (Vintage)", buy: "60", sell: "160", profit: "Medium", margin: "+167%" },
+    { name: "Carhartt Detroit Jacket", buy: "400", sell: "650", profit: "Medium", margin: "+62%" },
+    { name: "New Balance 550", buy: "700", sell: "1050", profit: "Medium", margin: "+50%" },
+    { name: "The North Face Nuptse", buy: "800", sell: "1200", profit: "Medium", margin: "+50%" },
+  ];
+  return (
+    <div>
+      <PageTitle icon="💰" title="Profit Analysis" sub="Estimeret profit per produkt baseret på aktuelle markedspriser" />
+      <StatRow stats={[{ icon: "💰", label: "Avg Profit", value: "94%", color: "green" }, { icon: "🔝", label: "Bedste Flip", value: "Levi's 501", color: "amber" }, { icon: "📊", label: "High Profit Items", value: "67%", color: "cyan" }, { icon: "💵", label: "Avg Fortjeneste", value: "480 kr", color: "green" }]} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {items.map((it, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: `up .4s ease ${i * .04}s both`, flexWrap: "wrap" }}>
+            <div style={{ width: 26, height: 26, borderRadius: 7, background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "var(--green)", flexShrink: 0 }}>{i + 1}</div>
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{it.name}</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Køb: ~{it.buy} kr · Sælg: ~{it.sell} kr</div>
+            </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: "var(--green)" }}>{it.margin}</span>
+              <Badge color={it.profit === "High" ? "green" : "amber"}>{it.profit}</Badge>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SellSpeedPage() {
+  const items = [
+    { name: "Adidas Samba OG", speed: "Fast", days: "1-2 dage", c: "green" },
+    { name: "Jordan 1 Retro High", speed: "Fast", days: "1-3 dage", c: "green" },
+    { name: "Nike Tech Fleece", speed: "Fast", days: "2-4 dage", c: "green" },
+    { name: "Levi's 501 Vintage", speed: "Fast", days: "1-3 dage", c: "green" },
+    { name: "Stüssy Hoodie", speed: "Fast", days: "2-5 dage", c: "green" },
+    { name: "New Balance 550", speed: "Medium", days: "5-10 dage", c: "amber" },
+    { name: "Carhartt WIP Jakke", speed: "Medium", days: "4-8 dage", c: "amber" },
+    { name: "Ralph Lauren Polo", speed: "Medium", days: "5-12 dage", c: "amber" },
+    { name: "Arc'teryx Jakke", speed: "Medium", days: "7-14 dage", c: "amber" },
+    { name: "The North Face Nuptse", speed: "Medium", days: "6-12 dage", c: "amber" },
+    { name: "Ukendt Brand Blazer", speed: "Slow", days: "20+ dage", c: "red" },
+    { name: "Generic Fast Fashion", speed: "Slow", days: "30+ dage", c: "red" },
+  ];
+  const glowColor = { green: "var(--green)", amber: "var(--amber)", red: "var(--red)" };
+  return (
+    <div>
+      <PageTitle icon="⚡" title="Sell Speed" sub="Estimeret salgshastighed for populære produkter" />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 28 }}>
+        {[{ icon: "⚡", label: "Fast (1-5 dage)", value: "5", border: "rgba(16,185,129,.3)", valColor: "var(--green)" }, { icon: "🚶", label: "Medium (5-14 dage)", value: "5", border: "rgba(245,158,11,.3)", valColor: "var(--amber)" }, { icon: "🐌", label: "Slow (20+ dage)", value: "2", border: "rgba(239,68,68,.3)", valColor: "var(--red)" }].map((s, i) => (
+          <Card key={i} delay={i * .05} style={{ textAlign: "center", borderColor: s.border }}>
+            <div style={{ fontSize: 24, marginBottom: 6 }}>{s.icon}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "Syne", color: s.valColor }}>{s.value}</div>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 3 }}>{s.label}</div>
+          </Card>
+        ))}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {items.map((it, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: `up .4s ease ${i * .04}s both` }}>
+            <div style={{ width: 9, height: 9, borderRadius: "50%", background: glowColor[it.c], boxShadow: `0 0 7px ${glowColor[it.c]}`, flexShrink: 0 }} />
+            <div style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>{it.name}</div>
+            <div style={{ fontSize: 12, color: "var(--muted)" }}>{it.days}</div>
+            <Badge color={it.c}>{it.speed}</Badge>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChatPage({ apiKey }) {
+  const [messages, setMessages] = useState([{ role: "assistant", content: "👋 Hej! Jeg er Vinted AI.\n\nSpørg mig om:\n• 🔥 Hvad sælger bedst?\n• 💰 Mest profitable produkter?\n• ⚡ Hvad sælger hurtigst?\n• 🏆 Hvilke brands er trending?" }]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef(null);
+  const suggestions = ["Hvad sælger bedst nu?", "Bedste sneakers at flippe?", "Hvad skal jeg købe for 500 kr?", "Hvilke brands er hot?"];
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  const send = async (text) => {
+    const q = (text || input).trim();
+    if (!q || loading) return;
+    setInput("");
+    const history = [...messages, { role: "user", content: q }].map(m => ({ role: m.role, content: m.content }));
+    setMessages(history);
+    setLoading(true);
+    try {
+      const isGroq = apiKey.startsWith("gsk-");
+      let reply = "";
+      if (isGroq) {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+          body: JSON.stringify({ model: "llama-3.3-70b-versatile", max_tokens: 1000, messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history] }),
+        });
+        const data = await res.json();
+        reply = data.choices?.[0]?.message?.content || "Beklager, prøv igen.";
+      } else {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+          body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: SYSTEM_PROMPT, messages: history }),
+        });
+        const data = await res.json();
+        reply = data.content?.[0]?.text || "Beklager, prøv igen.";
+      }
+      setMessages(m => [...m, { role: "assistant", content: reply }]);
+    } catch {
+      setMessages(m => [...m, { role: "assistant", content: "❌ Fejl. Tjek din API nøgle og prøv igen." }]);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 130px)", minHeight: 400 }}>
+      <PageTitle icon="🤖" title="AI Chat" sub="Stil spørgsmål til din personlige resale AI" />
+      <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginBottom: 16 }}>
+        {suggestions.map((s, i) => (
+          <button key={i} onClick={() => send(s)} style={{ padding: "6px 13px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 20, color: "var(--muted)", fontSize: 12, cursor: "pointer", transition: "all .2s", fontFamily: "inherit" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,229,255,.4)"; e.currentTarget.style.color = "var(--accent)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)"; }}>
+            {s}
+          </button>
+        ))}
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 14, marginBottom: 14, paddingRight: 4 }}>
+        {messages.map((m, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", animation: "up .3s ease both" }}>
+            {m.role === "assistant" && <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg, rgba(0,229,255,.12), rgba(124,58,237,.12))", border: "1px solid rgba(0,229,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, marginRight: 9, marginTop: 3 }}>🤖</div>}
+            <div style={{ maxWidth: "75%", padding: "12px 16px", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: m.role === "user" ? "rgba(0,229,255,.07)" : "var(--surface2)", border: `1px solid ${m.role === "user" ? "rgba(0,229,255,.2)" : "var(--border)"}`, fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{m.content}</div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display: "flex", gap: 9, alignItems: "center" }}>
+            <div style={{ width: 30, height: 30, borderRadius: 9, background: "linear-gradient(135deg, rgba(0,229,255,.12), rgba(124,58,237,.12))", border: "1px solid rgba(0,229,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>🤖</div>
+            <div style={{ display: "flex", gap: 5, padding: "12px 16px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "16px 16px 16px 4px" }}>
+              {[0, .2, .4].map((d, i) => <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", animation: `pulse 1.2s ease ${d}s infinite` }} />)}
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+      <div style={{ display: "flex", gap: 9 }}>
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} placeholder="Stil et spørgsmål..."
+          style={{ flex: 1, padding: "13px 16px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, color: "var(--text)", fontSize: 14, outline: "none", fontFamily: "inherit", transition: "border .2s" }}
+          onFocus={e => e.target.style.borderColor = "rgba(0,229,255,.4)"}
+          onBlur={e => e.target.style.borderColor = "var(--border)"} />
+        <button onClick={() => send()} disabled={loading || !input.trim()} style={{ padding: "13px 18px", background: input.trim() && !loading ? "linear-gradient(135deg,#00e5ff,#7c3aed)" : "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, color: input.trim() && !loading ? "#fff" : "var(--muted)", cursor: loading || !input.trim() ? "not-allowed" : "pointer", fontSize: 17, transition: "all .2s" }}>➤</button>
+      </div>
+    </div>
+  );
+}
+
+function MarketPage() {
+  const trends = [
+    { cat: "Vintage Denim", change: "+41%", up: true, brands: "Levi's, Lee, Wrangler" },
+    { cat: "Sneakers", change: "+34%", up: true, brands: "Nike, Adidas, NB" },
+    { cat: "Streetwear", change: "+28%", up: true, brands: "Stüssy, Carhartt, Supreme" },
+    { cat: "Outdoor/Technical", change: "+22%", up: true, brands: "Arc'teryx, TNF, Patagonia" },
+    { cat: "Luxury Basics", change: "+15%", up: true, brands: "Acne, COS, Toteme" },
+    { cat: "Fast Fashion", change: "-18%", up: false, brands: "Zara, H&M, Shein" },
+    { cat: "Formal Wear", change: "-12%", up: false, brands: "Various" },
+  ];
+  return (
+    <div>
+      <PageTitle icon="📈" title="Market Trends" sub="Aktuelle markedsbevægelser og kategori vækst" />
+      <StatRow stats={[{ icon: "📈", label: "Vækst markeder", value: "5", color: "green" }, { icon: "📉", label: "Faldende", value: "2", color: "red" }, { icon: "🏆", label: "Top Trend", value: "Denim +41%", color: "amber" }, { icon: "🌍", label: "Bedste marked", value: "DK + SE", color: "cyan" }]} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {trends.map((t, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: `up .4s ease ${i * .05}s both` }}>
+            <span style={{ fontSize: 20 }}>{t.up ? "📈" : "📉"}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{t.cat}</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{t.brands}</div>
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: t.up ? "var(--green)" : "var(--red)" }}>{t.change}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BestBuyPage() {
+  const items = [
+    { name: "Levi's 501 Jeans (W30 L32)", buy: "50-100 kr", sell: "200-400 kr", where: "Loppemarkeder, Genbrugsbutikker", risk: "Low" },
+    { name: "Nike Air Max 90 (str. 42-44)", buy: "200-400 kr", sell: "600-900 kr", where: "Facebook Marketplace, Vinted", risk: "Low" },
+    { name: "Adidas Samba (hvid)", buy: "350-500 kr", sell: "700-1000 kr", where: "Vinted, Lokal salg", risk: "Low" },
+    { name: "Carhartt WIP Jakke (S/M)", buy: "300-500 kr", sell: "700-1100 kr", where: "Vinted, Depop", risk: "Medium" },
+    { name: "Stüssy Hoodie (M/L)", buy: "400-600 kr", sell: "900-1400 kr", where: "eBay, Vinted", risk: "Medium" },
+    { name: "Arc'teryx Jakke", buy: "1200-2000 kr", sell: "2500-3500 kr", where: "eBay, Vestiaire", risk: "Medium" },
+    { name: "Jordan 1 Retro (DS)", buy: "800-1200 kr", sell: "1500-2500 kr", where: "StockX, eBay", risk: "Medium" },
+    { name: "Vintage Ralph Lauren (80-90s)", buy: "40-80 kr", sell: "150-300 kr", where: "Loppemarkeder", risk: "Low" },
+  ];
+  return (
+    <div>
+      <PageTitle icon="🛒" title="Best Products To Buy" sub="Anbefalede produkter at købe og sælge videre" />
+      <StatRow stats={[{ icon: "🛒", label: "Anbefalede Køb", value: "8", color: "cyan" }, { icon: "💰", label: "Avg ROI", value: "180%", color: "green" }, { icon: "⚠️", label: "Low Risk Items", value: "4", color: "amber" }, { icon: "🎯", label: "Top Pick", value: "Levi's 501", color: "cyan" }]} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {items.map((it, i) => (
+          <Card key={i} delay={i * .05}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{it.name}</div>
+                <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: 12 }}><span style={{ color: "var(--muted)" }}>Køb: </span><span style={{ color: "var(--red)", fontWeight: 600 }}>{it.buy}</span></div>
+                  <div style={{ fontSize: 12 }}><span style={{ color: "var(--muted)" }}>Sælg: </span><span style={{ color: "var(--green)", fontWeight: 600 }}>{it.sell}</span></div>
+                </div>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>📍 {it.where}</div>
+              </div>
+              <Badge color={it.risk === "Low" ? "green" : "amber"}>Risk: {it.risk}</Badge>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BrandsPage() {
+  const brands = [
+    { name: "Levi's", score: 98, cat: "Denim", note: "Vintage 501 er guld. Altid efterspurgt.", tier: "S" },
+    { name: "Nike", score: 96, cat: "Sneakers", note: "Tech Fleece og retro sneakers sælger lynhurtigt.", tier: "S" },
+    { name: "Adidas", score: 94, cat: "Sneakers", note: "Samba og Gazelle er HOT. Høj flip-value.", tier: "S" },
+    { name: "Arc'teryx", score: 93, cat: "Technical", note: "Premium brand — høj pris, høj profit.", tier: "S" },
+    { name: "Stüssy", score: 91, cat: "Streetwear", note: "Collaborations og vintage giver stor profit.", tier: "A" },
+    { name: "Carhartt WIP", score: 89, cat: "Workwear", note: "Detroit jakker og beanies sælger godt.", tier: "A" },
+    { name: "New Balance", score: 87, cat: "Sneakers", note: "550 og 9060 er trending.", tier: "A" },
+    { name: "Ralph Lauren", score: 85, cat: "Classics", note: "Vintage polo er let at finde billigt.", tier: "A" },
+    { name: "The North Face", score: 84, cat: "Outdoor", note: "Nuptse puffer er god profit.", tier: "A" },
+    { name: "Supreme", score: 82, cat: "Streetwear", note: "Høj profit på box logo items.", tier: "B" },
+    { name: "Patagonia", score: 80, cat: "Outdoor", note: "Miljøbevidst brand — efterspurgt brugt.", tier: "B" },
+    { name: "Acne Studios", score: 78, cat: "Luxury", note: "Scarf og jeans har god resale value.", tier: "B" },
+  ];
+  const tc = { S: ["rgba(245,158,11,.1)","rgba(245,158,11,.35)","#f59e0b"], A: ["rgba(0,229,255,.1)","rgba(0,229,255,.3)","#00e5ff"], B: ["rgba(124,58,237,.1)","rgba(124,58,237,.3)","#a78bfa"] };
+  return (
+    <div>
+      <PageTitle icon="🏆" title="Best Brands" sub="Top brands til resale — rangeret efter profit potentiale" />
+      <StatRow stats={[{ icon: "🥇", label: "S-Tier Brands", value: "4", color: "amber" }, { icon: "🥈", label: "A-Tier Brands", value: "5", color: "cyan" }, { icon: "🥉", label: "B-Tier Brands", value: "3", color: "purple" }, { icon: "📊", label: "Avg Score", value: "87", color: "green" }]} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {brands.map((b, i) => {
+          const t = tc[b.tier];
+          return (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", background: "var(--surface2)", borderRadius: 11, border: "1px solid var(--border)", animation: `up .4s ease ${i * .04}s both`, flexWrap: "wrap" }}>
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: t[0], border: `1px solid ${t[1]}`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: t[2], fontSize: 14, flexShrink: 0 }}>{b.tier}</div>
+              <div style={{ flex: 1, minWidth: 100 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{b.name}</div>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 3 }}>{b.note}</div>
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "var(--accent)" }}>{b.score}/100</div>
+                <div style={{ fontSize: 11, color: "var(--muted)" }}>{b.cat}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DashboardPage() {
+  const top = [
+    { name: "Levi's 501 Vintage", brand: "Levi's", profit: "High", speed: "Fast", category: "Denim" },
+    { name: "Adidas Samba OG", brand: "Adidas", profit: "High", speed: "Fast", category: "Sneakers" },
+    { name: "Nike Tech Fleece", brand: "Nike", profit: "High", speed: "Fast", category: "Sportswear" },
+    { name: "Stüssy Hoodie", brand: "Stüssy", profit: "High", speed: "Fast", category: "Streetwear" },
+    { name: "Carhartt WIP Jakke", brand: "Carhartt", profit: "Medium", speed: "Medium", category: "Workwear" },
+  ];
+  return (
+    <div>
+      <PageTitle icon="📊" title="Dashboard" sub="Komplet overblik over Vinted markedet" />
+      <StatRow stats={[{ icon: "🔥", label: "Trending Items", value: "847", color: "cyan" }, { icon: "💰", label: "Avg Profit", value: "94%", color: "green" }, { icon: "⚡", label: "Fast Sellers", value: "62%", color: "amber" }, { icon: "📈", label: "Vækst uge", value: "+23%", color: "green" }]} />
+      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>🏆 Top 5 Lige Nu</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 28 }}>
+        {top.map((p, i) => <Row key={i} rank={i + 1} {...p} delay={i * .05} />)}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
+        {[{ icon: "👖", title: "Denim", val: "+41%", c: "var(--accent)" }, { icon: "👟", title: "Sneakers", val: "+34%", c: "var(--green)" }, { icon: "🧥", title: "Streetwear", val: "+28%", c: "var(--amber)" }, { icon: "🏔️", title: "Technical", val: "+22%", c: "#a78bfa" }].map((t, i) => (
+          <Card key={i} delay={i * .06} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ fontSize: 26 }}>{t.icon}</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{t.title}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "Syne", color: t.c }}>{t.val}</div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LandingPage({ onStart }) {
+  const [key, setKey] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [d, setD] = useState("");
+
+  useEffect(() => {
+    if (!loading) return;
+    const t = setInterval(() => setD(v => v.length >= 3 ? "" : v + "."), 500);
+    return () => clearInterval(t);
+  }, [loading]);
+
+  const go = async () => {
+    if (!key.trim()) { setError("Indtast din API nøgle."); return; }
+    if (key.trim().length < 10) { setError("Nøglen ser for kort ud."); return; }
+    setLoading(true); setError("");
+    await new Promise(r => setTimeout(r, 1600));
+    setLoading(false);
+    onStart(key.trim());
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden", background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,229,255,.05), transparent), var(--bg)" }}>
+      <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(28,35,51,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(28,35,51,.5) 1px, transparent 1px)", backgroundSize: "56px 56px", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent, rgba(0,229,255,.4), transparent)", animation: "scan 5s linear infinite", pointerEvents: "none" }} />
+      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 440, padding: "0 20px", animation: "up .7s ease both" }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ fontSize: 48, marginBottom: 14 }}>🤖</div>
+          <h1 style={{ fontFamily: "Syne", fontSize: 38, fontWeight: 800, background: "linear-gradient(90deg,#00e5ff,#a78bfa,#00e5ff)", backgroundSize: "200%", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmer 3s linear infinite", marginBottom: 10 }}>Vinted AI</h1>
+          <div style={{ fontSize: 12, color: "var(--muted)", letterSpacing: ".12em", textTransform: "uppercase" }}>Professional Resale Intelligence</div>
+        </div>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, padding: 30, boxShadow: "0 0 60px rgba(0,0,0,.6)" }}>
+          <div style={{ textAlign: "center", marginBottom: 22 }}>
+            <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "Syne", marginBottom: 5 }}>Aktivér AI System</div>
+            <div style={{ fontSize: 13, color: "var(--muted)" }}>Indtast din Groq eller Anthropic API nøgle</div>
+          </div>
+          <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--muted)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 7 }}>API Nøgle</label>
+          <input type="password" value={key} onChange={e => { setKey(e.target.value); setError(""); }} onKeyDown={e => e.key === "Enter" && go()} placeholder="gsk-... eller sk-ant-..."
+            style={{ width: "100%", padding: "12px 14px", background: "var(--surface2)", border: `1px solid ${error ? "var(--red)" : "var(--border)"}`, borderRadius: 10, color: "var(--text)", fontSize: 14, outline: "none", fontFamily: "inherit", transition: "border .2s", marginBottom: 6 }}
+            onFocus={e => { if (!error) e.target.style.borderColor = "rgba(0,229,255,.45)"; }}
+            onBlur={e => { if (!error) e.target.style.borderColor = error ? "var(--red)" : "var(--border)"; }} />
+          {error && <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 10 }}>{error}</div>}
+          <button onClick={go} disabled={loading} style={{ width: "100%", padding: "14px", borderRadius: 10, border: "none", cursor: loading ? "not-allowed" : "pointer", background: loading ? "var(--surface2)" : "linear-gradient(135deg,#00e5ff,#7c3aed)", color: loading ? "var(--muted)" : "#fff", fontSize: 15, fontWeight: 700, fontFamily: "Syne", transition: "all .3s", opacity: loading ? .7 : 1, boxShadow: loading ? "none" : "0 4px 24px rgba(0,229,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", gap: 9, marginTop: 4 }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = ""; }}>
+            {loading
+              ? <><div style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .8s linear infinite" }} /> Starter{d}</>
+              : <><span>⚡</span> Start AI System</>}
+          </button>
+          <div style={{ marginTop: 16, padding: "9px 13px", background: "rgba(0,229,255,.04)", border: "1px solid rgba(0,229,255,.1)", borderRadius: 8, fontSize: 11, color: "var(--muted)", textAlign: "center" }}>
+            🔒 Din nøgle gemmes kun lokalt i denne session
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [apiKey, setApiKey] = useState(null);
+  const [page, setPage] = useState(null);
+
+  const renderPage = () => {
+    switch (page) {
+      case "trending": return <TrendingPage />;
+      case "profit": return <ProfitPage />;
+      case "sellspeed": return <SellSpeedPage />;
+      case "chat": return <ChatPage apiKey={apiKey} />;
+      case "market": return <MarketPage />;
+      case "bestbuy": return <BestBuyPage />;
+      case "brands": return <BrandsPage />;
+      case "dashboard": return <DashboardPage />;
+      default: return null;
+    }
+  };
+
+  return (
+    <>
+      <style>{css}</style>
+      {!apiKey
+        ? <LandingPage onStart={k => setApiKey(k)} />
+        : (
+          <div style={{ minHeight: "100vh" }}>
+            {/* Header with back button + logout */}
+            <header style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 52, position: "sticky", top: 0, zIndex: 50 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {page && (
+                  <button onClick={() => setPage(null)} style={{ width: 32, height: 32, borderRadius: 8, background: "var(--surface2)", border: "1px solid var(--border)", cursor: "pointer", color: "var(--muted)", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.borderColor = "rgba(0,229,255,.3)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = "var(--muted)"; e.currentTarget.style.borderColor = "var(--border)"; }}>
+                    ←
+                  </button>
+                )}
+                <span style={{ fontFamily: "Syne", fontWeight: 800, fontSize: 18, background: "linear-gradient(90deg,#00e5ff,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Vinted AI</span>
+                {page && <span style={{ fontSize: 12, color: "var(--muted)" }}>/ {NAV.find(n => n.id === page)?.label}</span>}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.2)", borderRadius: 20 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--green)", animation: "pulse 2s ease infinite" }} />
+                  <span style={{ fontSize: 10, color: "var(--green)", fontWeight: 600 }}>AI Online</span>
+                </div>
+                <button onClick={() => { setApiKey(null); setPage(null); }} style={{ padding: "5px 10px", background: "rgba(239,68,68,.07)", border: "1px solid rgba(239,68,68,.15)", borderRadius: 7, color: "var(--red)", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>Log ud</button>
+              </div>
+            </header>
+
+            {/* HOME — ONLY BIG BUTTON GRID, NO SCROLLBAR ON MAIN MENU (body hidden but container scroll if needed) BUT we set overflow-y: auto only on container if content smaller then viewport? we want no scroll on main menu => ensure body doesn't have overflow, container height: min-height 100vh - header */}
+            {!page && (
+              <div style={{ minHeight: "calc(100vh - 52px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px" }}>
+                <div style={{ width: "100%", maxWidth: 700, margin: "0 auto" }}>
+                  <div style={{ textAlign: "center", marginBottom: 32, animation: "up .5s ease both" }}>
+                    <div style={{ fontSize: 34, marginBottom: 8 }}>👋</div>
+                    <h1 style={{ fontFamily: "Syne", fontSize: 26, fontWeight: 800, marginBottom: 6 }}>Hvad vil du analysere?</h1>
+                    <p style={{ color: "var(--muted)", fontSize: 14 }}>Tryk på en knap for at åbne siden</p>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 16 }}>
+                    {NAV.map((n, i) => (
+                      <button key={n.id} onClick={() => setPage(n.id)} style={{
+                        display: "flex", alignItems: "center", gap: 16, padding: "20px 18px",
+                        background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18,
+                        cursor: "pointer", textAlign: "left", transition: "all .2s",
+                        animation: `up .4s ease ${i * .05}s both`, fontFamily: "inherit",
+                      }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,229,255,.4)"; e.currentTarget.style.background = "#0f1622"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 28px rgba(0,229,255,.07)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--surface)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+                        <div style={{ width: 50, height: 50, borderRadius: 14, background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, flexShrink: 0 }}>{n.icon}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: 16, color: "var(--text)", fontFamily: "Syne", marginBottom: 4 }}>{n.label}</div>
+                          <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.3 }}>{n.desc}</div>
+                        </div>
+                        <div style={{ color: "var(--muted)", fontSize: 20, flexShrink: 0 }}>→</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PAGE */}
+            {page && (
+              <div style={{ maxWidth: 800, margin: "0 auto", padding: "24px 16px 50px" }}>
+                {renderPage()}
+              </div>
+            )}
+          </div>
+        )
+      }
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
